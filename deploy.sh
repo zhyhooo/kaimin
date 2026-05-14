@@ -242,7 +242,7 @@ else
     NGINX_ENABLED="/etc/nginx/conf.d"
 fi
 
-cat > ${NGINX_AVAILABLE}/${SERVICE_NAME} << 'NGINXEOF'
+cat > ${NGINX_AVAILABLE}/${SERVICE_NAME} << NGINXEOF
 server {
     listen 80;
     server_name _;
@@ -270,7 +270,7 @@ server {
 
     # 管理后台静态文件
     location /admin {
-        alias ${ADMIN_DIR};
+        alias ${ADMIN_DIR}/;
         index index.html;
         try_files $uri $uri/ /admin/index.html;
     }
