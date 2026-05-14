@@ -70,8 +70,6 @@ else
     apt install -y ${CORE_PACKAGES} mysql-server
 fi
 
-# 确保 pip 最新
-python3 -m pip install --upgrade pip -q
 log_info "基础依赖安装完成"
 
 # ============================================================
