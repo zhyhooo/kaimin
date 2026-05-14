@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+from urllib.parse import quote_plus
 
 
 class Settings(BaseSettings):
@@ -41,7 +42,7 @@ class Settings(BaseSettings):
     def DATABASE_URL(self) -> str:
         if self.DEBUG and not self.DB_PASSWORD:
             return "sqlite:///./kaimin_test.db"
-        return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?charset=utf8mb4"
+        return f"mysql+pymysql://{self.DB_USER}:{quote_plus(self.DB_PASSWORD)}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?charset=utf8mb4"
 
     class Config:
         env_file = ".env"
