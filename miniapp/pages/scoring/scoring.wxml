@@ -1,0 +1,44 @@
+<view class="page">
+  <view class="score-board" wx:if="{{board}}">
+    <view class="total-score">
+      <text class="num">{{board.total_score || 0}}</text>
+      <text class="unit">分</text>
+    </view>
+    <view class="score-detail">
+      <view class="item">
+        <text class="val">{{board.base_score || 0}}</text>
+        <text class="lbl">基础分</text>
+      </view>
+      <view class="item">
+        <text class="val">{{board.event_score || 0}}</text>
+        <text class="lbl">活动分</text>
+      </view>
+      <view class="item">
+        <text class="val">{{board.info_score || 0}}</text>
+        <text class="lbl">信息分</text>
+      </view>
+      <view class="item">
+        <text class="val">{{board.other_score || 0}}</text>
+        <text class="lbl">其他</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-header">
+      <text class="title">积分任务</text>
+    </view>
+    <view class="task-item" wx:for="{{tasks}}" wx:key="id">
+      <view class="task-info">
+        <text class="t-name">{{item.name}}</text>
+        <text class="t-desc">{{item.description || ''}}</text>
+      </view>
+      <view class="t-score">+{{item.score}}</view>
+    </view>
+    <view class="empty" wx:if="{{tasks.length === 0}}">暂无任务</view>
+  </view>
+
+  <view class="btn-area">
+    <button class="btn-records" bindtap="goRecords">查看积分记录</button>
+  </view>
+</view>

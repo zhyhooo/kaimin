@@ -1,0 +1,19 @@
+<view class="page">
+  <view class="search-bar">
+    <input class="search-input" placeholder="搜索姓名" value="{{keyword}}" bindinput="onSearch" confirm-type="search"/>
+  </view>
+  <scroll-view scroll-x class="branch-tabs" wx:if="{{branches.length > 0}}">
+    <view class="branch-tab" wx:for="{{branches}}" wx:key="id">{{item.name}}</view>
+  </scroll-view>
+  <view class="member-list">
+    <view class="member-item" wx:for="{{members}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <image class="avatar" src="{{item.avatar || '/assets/default-avatar.png'}}" mode="aspectFill"/>
+      <view class="info">
+        <text class="name">{{item.name}}</text>
+        <text class="branch">{{item.branch_name || item.org_position || ''}}</text>
+      </view>
+      <text class="arrow">→</text>
+    </view>
+  </view>
+  <view class="empty" wx:if="{{members.length === 0}}">暂无成员</view>
+</view>

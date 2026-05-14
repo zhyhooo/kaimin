@@ -1,0 +1,11 @@
+<view class="page">
+  <view class="notice-item {{item.is_pinned ? 'pinned' : ''}}" wx:for="{{notices}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+    <view class="dot {{item.is_read ? '' : 'unread'}}"></view>
+    <view class="content">
+      <text class="pin-tag" wx:if="{{item.is_pinned}}">置顶</text>
+      <text class="title">{{item.title}}</text>
+      <text class="meta">{{item.publish_time}} {{item.location ? '· ' + item.location : ''}}</text>
+    </view>
+  </view>
+  <view class="empty" wx:if="{{!loading && notices.length === 0}}">暂无通知</view>
+</view>

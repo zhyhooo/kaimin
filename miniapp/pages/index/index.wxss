@@ -1,0 +1,35 @@
+.page { padding: 20rpx; background: #f5f5f5; min-height: 100vh; }
+
+.user-card {
+  display: flex; align-items: center; background: linear-gradient(135deg, #C41E2E, #e8485a);
+  padding: 30rpx; border-radius: 16rpx; margin-bottom: 24rpx; position: relative;
+}
+.avatar { width: 80rpx; height: 80rpx; border-radius: 50%; border: 3rpx solid #fff; }
+.user-info { flex: 1; margin-left: 20rpx; }
+.name { color: #fff; font-size: 34rpx; font-weight: bold; display: block; }
+.branch { color: rgba(255,255,255,0.8); font-size: 26rpx; margin-top: 6rpx; }
+.badge { background: #fff; color: #C41E2E; font-size: 22rpx; padding: 4rpx 12rpx; border-radius: 20rpx; }
+
+.section { background: #fff; border-radius: 12rpx; padding: 24rpx; margin-bottom: 20rpx; }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16rpx; }
+.title { font-size: 32rpx; font-weight: bold; color: #333; }
+.more { font-size: 26rpx; color: #999; }
+
+.notice-item { display: flex; align-items: center; padding: 16rpx 0; border-bottom: 1rpx solid #f0f0f0; }
+.notice-item:last-child { border: none; }
+.dot { width: 14rpx; height: 14rpx; border-radius: 50%; background: #ddd; margin-right: 16rpx; flex-shrink: 0; }
+.dot.unread { background: #C41E2E; }
+.content { flex: 1; min-width: 0; }
+.n-title { font-size: 28rpx; color: #333; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.n-time { font-size: 22rpx; color: #999; margin-top: 4rpx; }
+.empty { text-align: center; color: #999; font-size: 28rpx; padding: 40rpx 0; }
+
+.event-card { background: #f9f9f9; border-radius: 12rpx; overflow: hidden; }
+.e-cover { width: 100%; height: 240rpx; }
+.e-info { padding: 20rpx; }
+.e-title { font-size: 30rpx; font-weight: bold; color: #333; }
+.e-time, .e-location { font-size: 24rpx; color: #666; display: block; margin-top: 8rpx; }
+
+.grid { display: flex; flex-wrap: wrap; background: #fff; border-radius: 12rpx; padding: 10rpx; }
+.grid-item { width: 25%; text-align: center; padding: 24rpx 0; font-size: 24rpx; color: #333; }
+.icon { display: block; font-size: 44rpx; margin-bottom: 8rpx; }

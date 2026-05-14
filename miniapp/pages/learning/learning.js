@@ -1,0 +1,2 @@
+const app = getApp()
+Page({ data: { materials: [], category: '', keyword: '' }, onLoad() { this.load() }, async load() { try { const res = await app.request({ url: `/learning/?${this.data.category ? 'category='+this.data.category : ''}${this.data.keyword ? '&keyword='+this.data.keyword : ''}` }); this.setData({ materials: res || [] }) } catch (e) {} }, onSearch(e) { this.setData({ keyword: e.detail.value }); this.load() } })

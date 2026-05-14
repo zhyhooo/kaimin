@@ -1,0 +1,25 @@
+<view class="page" wx:if="{{detail}}">
+  <image class="cover" src="{{detail.cover_image}}" mode="aspectFill" wx:if="{{detail.cover_image}}"/>
+  <view class="header">
+    <text class="title">{{detail.title}}</text>
+    <view class="meta">
+      <text class="time">🕐 {{detail.event_time}}</text>
+      <text class="location">📍 {{detail.location}}</text>
+      <text class="organizer">👤 组织者：{{detail.organizer}}</text>
+    </view>
+  </view>
+  <view class="body">
+    <rich-text nodes="{{detail.content}}"></rich-text>
+  </view>
+  <view class="actions" wx:if="{{detail.status === 'open'}}">
+    <button class="btn-signup" wx:if="{{!myReg}}" bindtap="signup">立即报名</button>
+    <button class="btn-cancel" wx:if="{{myReg && myReg.status === 'registered'}}" bindtap="cancel">取消报名</button>
+    <button class="btn-leave" wx:if="{{myReg && myReg.status === 'registered'}}" bindtap="leave">请假</button>
+    <view class="reg-status" wx:if="{{myReg && myReg.status !== 'registered'}}">
+      <text>当前状态：{{myReg.status === 'leave' ? '已请假' : myReg.status === 'cancelled' ? '已取消' : myReg.status}}</text>
+    </view>
+  </view>
+  <view class="closed-tip" wx:if="{{detail.status !== 'open'}}">
+    <text>活动已{{detail.status === 'closed' ? '截止报名' : '结束'}}</text>
+  </view>
+</view>

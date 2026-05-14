@@ -1,0 +1,19 @@
+<view class="page">
+  <view class="form-section">
+    <view class="form-item">
+      <text class="label">标题</text>
+      <input class="input" placeholder="请输入标题" value="{{title}}" bindinput="onFieldChange" data-field="title"/>
+    </view>
+    <view class="form-item">
+      <text class="label">内容</text>
+      <textarea class="textarea" placeholder="请输入正文内容" value="{{content}}" bindinput="onFieldChange" data-field="content" auto-height maxlength="2000"/>
+    </view>
+    <view class="form-item switch-item">
+      <text class="label">是否联名</text>
+      <switch checked="{{isJoint}}" bindchange="onSwitchChange" color="#C41E2E"/>
+    </view>
+  </view>
+  <view class="submit-area">
+    <button class="btn-submit" bindtap="submit">提交</button>
+  </view>
+</view>

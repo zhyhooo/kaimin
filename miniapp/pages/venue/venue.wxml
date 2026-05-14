@@ -1,0 +1,25 @@
+<view class="page" wx:if="{{venue}}">
+  <image class="cover" src="{{venue.cover_image}}" mode="aspectFill" wx:if="{{venue.cover_image}}"/>
+  <view class="header">
+    <text class="name">{{venue.name}}</text>
+    <text class="address">📍 {{venue.address}}</text>
+    <text class="desc" wx:if="{{venue.description}}">{{venue.description}}</text>
+  </view>
+  <view class="info-section">
+    <view class="info-row" wx:if="{{venue.open_time}}">
+      <text class="label">开放时间</text>
+      <text class="value">{{venue.open_time}}</text>
+    </view>
+    <view class="info-row" wx:if="{{venue.capacity}}">
+      <text class="label">容纳人数</text>
+      <text class="value">{{venue.capacity}}人</text>
+    </view>
+    <view class="info-row" wx:if="{{venue.facilities}}">
+      <text class="label">设施</text>
+      <text class="value">{{venue.facilities}}</text>
+    </view>
+  </view>
+  <view class="btn-area">
+    <button class="btn-book" bindtap="goBooking">预约场地</button>
+  </view>
+</view>

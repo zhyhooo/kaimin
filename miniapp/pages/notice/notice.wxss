@@ -1,0 +1,10 @@
+.page { padding: 20rpx; background: #f5f5f5; min-height: 100vh; }
+.notice-item { display: flex; align-items: center; padding: 24rpx; background: #fff; border-radius: 12rpx; margin-bottom: 16rpx; }
+.notice-item.pinned { border-left: 6rpx solid #C41E2E; }
+.dot { width: 14rpx; height: 14rpx; border-radius: 50%; background: #ddd; margin-right: 16rpx; flex-shrink: 0; }
+.dot.unread { background: #C41E2E; }
+.content { flex: 1; min-width: 0; }
+.pin-tag { font-size: 20rpx; background: #C41E2E; color: #fff; padding: 2rpx 10rpx; border-radius: 8rpx; margin-right: 8rpx; vertical-align: middle; }
+.title { font-size: 28rpx; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.meta { font-size: 22rpx; color: #999; margin-top: 6rpx; display: block; }
+.empty { text-align: center; color: #999; font-size: 28rpx; padding: 120rpx 0; }

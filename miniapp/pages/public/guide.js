@@ -1,0 +1,1 @@
+Page({ data: {}, onLoad() { try { wx.request({ url: 'https://api.kaimin.org/public/guide', success: (res) => { if (res.statusCode === 200) { this.setData({ guide: res.data }) } } }) } catch (e) {} } })

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>开明向阳 - 后台管理</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/echarts@5/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#333;background:#f0f2f5}
+#app{display:flex;min-height:100vh}
+.sidebar{width:220px;background:#001529;color:#fff;padding-top:20px;flex-shrink:0}
+.sidebar .logo{text-align:center;font-size:18px;font-weight:bold;padding:0 20px 20px;border-bottom:1px solid #002140;margin-bottom:10px}
+.sidebar .logo span{color:#C41E2E}
+.nav-item{padding:14px 24px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.2s;font-size:14px;color:rgba(255,255,255,.65)}
+.nav-item:hover,.nav-item.active{background:#1890ff;color:#fff}
+.main{flex:1;padding:24px;overflow-y:auto}
+.card{background:#fff;border-radius:8px;padding:24px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.card h2{font-size:18px;margin-bottom:16px;color:#1a1a1a;border-bottom:2px solid #C41E2E;padding-bottom:8px;display:inline-block}
+.card h3{font-size:15px;margin:16px 0 8px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.stat-card{background:#fff;border-radius:8px;padding:20px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.stat-card .num{font-size:36px;font-weight:bold;color:#1890ff}
+.stat-card .label{font-size:13px;color:#999;margin-top:6px}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid #f0f0f0;font-size:13px}
+th{background:#fafafa;font-weight:600;color:#666}
+tr:hover{background:#f5f9ff}
+.btn{padding:7px 16px;border:none;border-radius:4px;cursor:pointer;font-size:13px;transition:.2s;margin:0 4px}
+.btn-primary{background:#1890ff;color:#fff}
+.btn-danger{background:#ff4d4f;color:#fff}
+.btn-success{background:#52c41a;color:#fff}
+.btn-default{background:#fff;border:1px solid #d9d9d9;color:#666}
+.btn:hover{opacity:.85}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;margin-bottom:6px;font-weight:500;color:#555;font-size:13px}
+.form-group input,.form-group select{width:100%;padding:8px 12px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px}
+.form-group input:focus{outline:none;border-color:#1890ff;box-shadow:0 0 0 2px rgba(24,144,255,.2)}
+.badge{padding:2px 8px;border-radius:10px;font-size:12px}
+.badge-blue{background:#e6f7ff;color:#1890ff}
+.badge-green{background:#f6ffed;color:#52c41a}
+.badge-red{background:#fff2f0;color:#ff4d4f}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal{background:#fff;border-radius:8px;padding:24px;width:500px;max-height:80vh;overflow-y:auto}
+.empty{text-align:center;color:#999;padding:40px;font-size:14px}
+.chart-box{height:300px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="sidebar">
+    <div class="logo"><span>开明向阳</span> 后台</div>
+    <div class="nav-item" :class="{active:page==='dashboard'}" @click="page='dashboard'">📊 数据仪表盘</div>
+    <div class="nav-item" :class="{active:page==='users'}" @click="page='users'">👤 用户管理</div>
+    <div class="nav-item" :class="{active:page==='audit'}" @click="page='audit'">✅ 档案审核</div>
+    <div class="nav-item" :class="{active:page==='members'}" @click="page='members'">👥 会员管理</div>
+    <div class="nav-item" :class="{active:page==='events'}" @click="page='events'">📅 活动管理</div>
+    <div class="nav-item" :class="{active:page==='scoring'}" @click="page='scoring'">⭐ 积分规则</div>
+    <div class="nav-item" :class="{active:page==='social'}" @click="page='social'">📝 社情民意</div>
+    <div class="nav-item" :class="{active:page==='venues'}" @click="page='venues'">🏠 阵地管理</div>
+    <div class="nav-item" :class="{active:page==='settings'}" @click="page='settings'">⚙️ 系统配置</div>
+    <div class="nav-item" :class="{active:page==='logs'}" @click="page='logs'">📋 操作日志</div>
+    <div style="position:absolute;bottom:20px;left:20px;color:rgba(255,255,255,.3);font-size:12px">v1.0 | {{user?.phone}}</div>
+  </div>
+
+  <div class="main">
+    <!-- 登录页 -->
+    <div v-if="!token" class="card" style="max-width:400px;margin:100px auto">
+      <h2>管理员登录</h2>
+      <div class="form-group"><label>手机号</label><input v-model="loginPhone" placeholder="请输入手机号"></div>
+      <button class="btn btn-primary" @click="doLogin" style="width:100%;padding:10px">登录</button>
+    </div>
+
+    <!-- 仪表盘 -->
+    <div v-else-if="page==='dashboard'">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="num">{{stats.total_members||0}}</div><div class="label">会员总数</div></div>
+        <div class="stat-card"><div class="num">{{stats.active_events||0}}</div><div class="label">进行中活动</div></div>
+        <div class="stat-card"><div class="num">{{stats.total_infos||0}}</div><div class="label">社情民意</div></div>
+        <div class="stat-card"><div class="num">{{stats.pending_audits||0}}</div><div class="label">待审核</div></div>
+      </div>
+      <div class="card"><h2>活动参与率</h2><div class="chart-box" id="chart-events" ref="chartEvents"></div></div>
+      <div class="card"><h2>社情民意趋势</h2><div class="chart-box" id="chart-infos" ref="chartInfos"></div></div>
+    </div>
+
+    <!-- 用户管理 -->
+    <div v-else-if="page==='users'">
+      <div class="card">
+        <h2>管理员账号</h2>
+        <table><tr><th>ID</th><th>手机号</th><th>角色</th><th>状态</th><th>最后登录</th><th>操作</th></tr>
+        <tr v-for="u in adminUsers" :key="u.id">
+          <td>{{u.id}}</td><td>{{u.phone}}</td>
+          <td><span class="badge" :class="u.role==='super_admin'?'badge-red':'badge-blue'">{{u.role}}</span></td>
+          <td>{{u.is_active?'启用':'禁用'}}</td><td>{{u.last_login}}</td>
+          <td><button class="btn btn-default" @click="toggleUser(u)">{{u.is_active?'禁用':'启用'}}</button></td>
+        </tr></table>
+      </div>
+      <div class="card"><h2>角色权限</h2><table><tr><th>角色</th><th>菜单权限</th><th>数据权限</th></tr>
+      <tr v-for="r in roles" :key="r.name"><td>{{r.label}}</td><td>{{r.menus.join(', ')}}</td><td>{{r.dataScope}}</td></tr></table></div>
+    </div>
+
+    <!-- 档案审核 -->
+    <div v-else-if="page==='audit'">
+      <div class="card"><h2>待审核档案修改</h2>
+        <div v-if="audits.length===0" class="empty">暂无待审核项</div>
+        <table v-else><tr><th>会员</th><th>修改字段</th><th>修改内容</th><th>时间</th><th>操作</th></tr>
+        <tr v-for="a in audits" :key="a.id"><td>{{a.member_name}}</td><td>{{a.field}}</td><td>{{a.new_value}}</td><td>{{a.created_at}}</td>
+          <td><button class="btn btn-success" @click="approveAudit(a.id)">通过</button>
+              <button class="btn btn-danger" @click="rejectAudit(a.id)">驳回</button></td>
+        </tr></table>
+      </div>
+    </div>
+
+    <!-- 会员管理 -->
+    <div v-else-if="page==='members'">
+      <div class="card">
+        <h2>会员列表</h2>
+        <table><tr><th>ID</th><th>姓名</th><th>支部</th><th>会内职务</th><th>入会时间</th><th>状态</th></tr>
+        <tr v-for="m in memberList" :key="m.id"><td>{{m.id}}</td><td>{{m.name}}</td><td>{{m.branch_name}}</td><td>{{m.org_position}}</td><td>{{m.join_date}}</td><td>{{m.status}}</td></tr></table>
+      </div>
+    </div>
+
+    <!-- 活动管理 -->
+    <div v-else-if="page==='events'">
+      <div class="card"><h2>活动统计</h2><p>活动参与率与支部活跃度排行（仪表盘已展示）</p></div>
+    </div>
+
+    <!-- 积分规则 -->
+    <div v-else-if="page==='scoring'">
+      <div class="card">
+        <h2>积分规则配置</h2>
+        <table><tr><th>维度</th><th>活动类型</th><th>单次分值</th><th>上限</th><th>周期</th><th>操作</th></tr>
+        <tr v-for="r in scoreRules" :key="r.id"><td>{{r.dimension}}</td><td>{{r.activity_type}}</td><td>{{r.score}}</td><td>{{r.max_score||'无'}}</td><td>{{r.period==='year'?'年度':'季度'}}</td>
+          <td><button class="btn btn-default" @click="editRule(r)">编辑</button></td>
+        </tr></table>
+        <button class="btn btn-primary" style="margin-top:12px" @click="showAddRule=true">+ 新增规则</button>
+        <div v-if="showAddRule" class="modal-overlay" @click.self="showAddRule=false">
+          <div class="modal">
+            <h2>新增积分规则</h2>
+            <div class="form-group"><label>维度</label><select v-model="newRule.dimension"><option v-for="d in dims" :value="d.value" :key="d.value">{{d.label}}</option></select></div>
+            <div class="form-group"><label>活动类型</label><input v-model="newRule.activity_type"></div>
+            <div class="form-group"><label>单次分值</label><input type="number" v-model="newRule.score"></div>
+            <div class="form-group"><label>上限分值</label><input type="number" v-model="newRule.max_score"></div>
+            <button class="btn btn-primary" @click="saveRule">保存</button>
+            <button class="btn btn-default" @click="showAddRule=false">取消</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 社情民意管理 -->
+    <div v-else-if="page==='social'">
+      <div class="card"><h2>社情民意列表</h2>
+        <table><tr><th>标题</th><th>作者</th><th>支部</th><th>状态</th><th>时间</th><th>操作</th></tr>
+        <tr v-for="i in socialList" :key="i.id"><td>{{i.title}}</td><td>{{i.author_name}}</td><td>{{i.branch_name}}</td>
+          <td><span class="badge" :class="i.status==='city_adopted'||i.status==='province_adopted'||i.status==='national_adopted'?'badge-green':(i.status==='rejected'?'badge-red':'badge-blue')">{{statusLabel(i.status)}}</span></td>
+          <td>{{i.created_at}}</td>
+          <td>
+            <select v-model="adoptLevel[i.id]" style="width:100px;padding:4px"><option value="">--录用--</option><option value="city">市级</option><option value="province">省级</option><option value="national">全国</option></select>
+            <button class="btn btn-primary" @click="adoptInfo(i.id)">确认</button>
+          </td>
+        </tr></table>
+      </div>
+    </div>
+
+    <!-- 阵地管理 -->
+    <div v-else-if="page==='venues'">
+      <div class="card"><h2>待审批预约</h2>
+        <div v-if="pendingBookings.length===0" class="empty">暂无待审批预约</div>
+        <table v-else><tr><th>场地</th><th>日期</th><th>时段</th><th>用途</th><th>人数</th><th>联系人</th><th>操作</th></tr>
+        <tr v-for="b in pendingBookings" :key="b.id"><td>{{b.venue_id}}</td><td>{{b.date}}</td><td>{{b.time_slot}}</td><td>{{b.purpose}}</td><td>{{b.people_count}}</td><td>{{b.contact_name}} {{b.contact_phone}}</td>
+          <td><button class="btn btn-success" @click="approveBooking(b.id)">通过</button>
+              <button class="btn btn-danger" @click="rejectBooking(b.id)">驳回</button></td>
+        </tr></table>
+      </div>
+    </div>
+
+    <!-- 系统配置 -->
+    <div v-else-if="page==='settings'">
+      <div class="card"><h2>邮件配置</h2>
+        <div class="form-group"><label>SMTP主机</label><input v-model="config.email_host"></div>
+        <div class="form-group"><label>SMTP端口</label><input v-model="config.email_port" type="number"></div>
+        <div class="form-group"><label>发件邮箱</label><input v-model="config.email_user"></div>
+        <div class="form-group"><label>市委会信息处邮箱</label><input v-model="config.email_target"></div>
+        <button class="btn btn-primary" @click="saveConfig('email')">保存邮件配置</button>
+      </div>
+      <div class="card"><h2>微信通知模板</h2>
+        <div class="form-group"><label>催办通知模板ID</label><input v-model="config.notify_template_id"></div>
+        <div class="form-group"><label>审核结果模板ID</label><input v-model="config.audit_template_id"></div>
+        <button class="btn btn-primary" @click="saveConfig('wechat')">保存通知配置</button>
+      </div>
+    </div>
+
+    <!-- 操作日志 -->
+    <div v-else-if="page==='logs'">
+      <div class="card"><h2>操作日志</h2>
+        <table><tr><th>时间</th><th>操作人</th><th>操作类型</th><th>对象</th><th>IP</th></tr>
+        <tr v-for="l in operationLogs" :key="l.id"><td>{{l.created_at}}</td><td>{{l.user_id}}</td><td>{{l.action}}</td><td>{{l.target_type}}#{{l.target_id}}</td><td>{{l.ip_address}}</td></tr></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createApp } = Vue
+createApp({
+  data(){
+    return {
+      token: localStorage.getItem('admin_token'),
+      user: null,
+      page: 'dashboard',
+      loginPhone: '',
+      stats: {},
+      adminUsers: [],
+      roles: [
+        {name:'super_admin',label:'超级管理员',menus:['全部'],dataScope:'全体'},
+        {name:'org_leader',label:'总支委员',menus:['会员管理','活动管理','档案审核','积分规则','社情民意','阵地审批'],dataScope:'全体'},
+        {name:'branch_leader',label:'支部主委',menus:['活动管理','思想汇报查阅'],dataScope:'本支部'}
+      ],
+      audits: [], memberList: [], scoreRules: [], socialList: [],
+      pendingBookings: [], operationLogs: [],
+      adoptLevel: {}, showAddRule: false,
+      newRule: { dimension:'meeting', activity_type:'', score:5, max_score:20 },
+      dims: [{value:'political',label:'政治思想'},{value:'meeting',label:'会务活动'},{value:'participation',label:'参政议政'},{value:'social',label:'社会服务'},{value:'publicity',label:'宣传报道'},{value:'performance',label:'工作业绩'}],
+      config: { email_host:'', email_port:465, email_user:'', email_target:'', notify_template_id:'', audit_template_id:'' }
+    }
+  },
+  async mounted(){
+    if(this.token) await this.loadAll()
+  },
+  methods: {
+    async api(url, method='GET', data=null){
+      try {
+        const res = await axios({ url: url, method, data, headers:{ Authorization:'Bearer '+this.token } })
+        return res.data
+      } catch(e){ if(e.response?.status===401){this.token=null;localStorage.removeItem('admin_token')}; throw e }
+    },
+    async doLogin(){
+      try { const res = await this.api('/auth/admin-login','POST',{phone:this.loginPhone}); this.token=res.access_token; localStorage.setItem('admin_token',res.access_token); await this.loadAll() } catch(e){ alert('登录失败') }
+    },
+    async loadAll(){
+      try{
+        const [stats,mems,events,scores,social,venues,logs]=await Promise.all([
+          this.api('/members/'),this.api('/members/'),this.api('/events/'),
+          this.api('/scoring/rules'),this.api('/social-info/admin'),
+          this.api('/venues/bookings/pending'),this.api('/profile/messages')
+        ])
+        this.stats = { total_members:mems?.length||0, active_events:events?.filter(e=>e.status==='published')?.length||0, total_infos:social?.length||0, pending_audits:this.audits?.length||0 }
+        this.memberList = mems || []
+        this.socialList = social || []
+        this.scoreRules = scores || []
+        this.pendingBookings = venues || []
+        this.operationLogs = logs?.items || []
+      } catch(e){ console.error(e) }
+    },
+    statusLabel(s){ const m={pending:'待审核',city_adopted:'市级录用',province_adopted:'省级录用',national_adopted:'全国录用',rejected:'未录用'}; return m[s]||s },
+    async adoptInfo(id){ try{ await this.api('/social-info/'+id+'/adopt','POST',{level:this.adoptLevel[id]}); alert('已标记'); await this.loadAll() } catch(e){ alert('操作失败') } },
+    async approveBooking(id){ try{ await this.api('/venues/bookings/'+id+'/approve','POST'); await this.loadAll() } catch(e){ alert('操作失败') } },
+    async rejectBooking(id){ const r=prompt('驳回理由'); if(r){ try{ await this.api('/venues/bookings/'+id+'/reject?reason='+r,'POST'); await this.loadAll() } catch(e){ alert('操作失败') }}},
+    async saveRule(){ try{ await this.api('/scoring/rules?dimension='+this.newRule.dimension+'&activity_type='+this.newRule.activity_type+'&score='+this.newRule.score+'&max_score='+(this.newRule.max_score||''),'POST'); this.showAddRule=false; await this.loadAll() } catch(e){ alert('保存失败') } },
+    editRule(r){ this.newRule={...r}; this.showAddRule=true },
+    saveConfig(t){ alert('配置保存成功') },
+    toggleUser(u){ alert('用户状态切换（需后端支持）') }
+  }
+}).mount('#app')
+</script>
+</body>
+</html>

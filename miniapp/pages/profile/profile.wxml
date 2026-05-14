@@ -1,0 +1,42 @@
+<view class="page">
+  <view class="profile-card" bindtap="goEdit">
+    <image class="avatar" src="{{profile.member.avatar || '/assets/default-avatar.png'}}" mode="aspectFill"/>
+    <view class="info">
+      <text class="name">{{profile.member.name || '未登录'}}</text>
+      <text class="role">{{profile.member.org_position || profile.member.role_name || ''}}</text>
+      <text class="branch" wx:if="{{profile.member.branch_name}}">{{profile.member.branch_name}}</text>
+    </view>
+    <view class="badge" wx:if="{{unreadCount > 0}}">{{unreadCount}}</view>
+  </view>
+
+  <view class="menu-section">
+    <view class="menu-item" bindtap="goEdit">
+      <text class="icon">✏️</text>
+      <text class="label">编辑资料</text>
+      <text class="arrow">→</text>
+    </view>
+    <view class="menu-item" bindtap="goMyEvents">
+      <text class="icon">📅</text>
+      <text class="label">我的活动</text>
+      <text class="arrow">→</text>
+    </view>
+    <view class="menu-item" bindtap="goMyInfos">
+      <text class="icon">📝</text>
+      <text class="label">我的社情民意</text>
+      <text class="arrow">→</text>
+    </view>
+    <view class="menu-item" bindtap="goMyScores">
+      <text class="icon">⭐</text>
+      <text class="label">我的积分</text>
+      <text class="arrow">→</text>
+    </view>
+    <view class="menu-item" bindtap="goMessages">
+      <text class="icon">💬</text>
+      <text class="label">消息中心</text>
+      <view class="right">
+        <view class="msg-badge" wx:if="{{unreadCount > 0}}">{{unreadCount}}</view>
+        <text class="arrow">→</text>
+      </view>
+    </view>
+  </view>
+</view>

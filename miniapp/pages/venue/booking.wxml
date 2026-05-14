@@ -1,0 +1,35 @@
+<view class="page">
+  <view class="form-section">
+    <view class="form-item">
+      <text class="label">预约日期</text>
+      <picker mode="date" value="{{date}}" bindchange="onDateChange">
+        <view class="picker-val">{{date || '请选择日期'}}</view>
+      </picker>
+    </view>
+    <view class="form-item">
+      <text class="label">时间段</text>
+      <picker range="{{slots}}" value="{{slotIndex}}" bindchange="onSlotChange">
+        <view class="picker-val">{{slot || '请选择时间段'}}</view>
+      </picker>
+    </view>
+    <view class="form-item">
+      <text class="label">用途</text>
+      <input class="input" placeholder="请输入使用用途" value="{{purpose}}" bindinput="onFieldChange" data-field="purpose"/>
+    </view>
+    <view class="form-item">
+      <text class="label">人数</text>
+      <input class="input" type="number" placeholder="请输入人数" value="{{count}}" bindinput="onFieldChange" data-field="count"/>
+    </view>
+    <view class="form-item">
+      <text class="label">联系人</text>
+      <input class="input" placeholder="请输入联系人姓名" value="{{name}}" bindinput="onFieldChange" data-field="name"/>
+    </view>
+    <view class="form-item">
+      <text class="label">联系电话</text>
+      <input class="input" type="number" placeholder="请输入联系电话" value="{{phone}}" bindinput="onFieldChange" data-field="phone" maxlength="11"/>
+    </view>
+  </view>
+  <view class="submit-area">
+    <button class="btn-submit" bindtap="submit">提交预约</button>
+  </view>
+</view>

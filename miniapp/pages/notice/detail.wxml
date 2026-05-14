@@ -1,0 +1,11 @@
+<view class="page" wx:if="{{detail}}">
+  <view class="header">
+    <text class="title">{{detail.title}}</text>
+    <text class="meta">{{detail.publish_time}} · 来自{{detail.author}}</text>
+  </view>
+  <view class="body"><rich-text nodes="{{detail.content}}"></rich-text></view>
+  <view class="attachments" wx:if="{{detail.attachments && detail.attachments.length}}">
+    <text class="att-title">附件</text>
+    <view class="att-item" wx:for="{{detail.attachments}}" wx:key="name">{{item.name}}</view>
+  </view>
+</view>

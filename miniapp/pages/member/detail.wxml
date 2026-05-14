@@ -1,0 +1,45 @@
+<view class="page" wx:if="{{member}}">
+  <view class="profile-card">
+    <image class="avatar" src="{{member.avatar || '/assets/default-avatar.png'}}" mode="aspectFill"/>
+    <text class="name">{{member.name}}</text>
+    <text class="role">{{member.role_name || member.org_position || ''}}</text>
+  </view>
+  <view class="info-section">
+    <view class="info-row" wx:if="{{member.mobile}}">
+      <text class="label">手机</text>
+      <text class="value">{{member.mobile}}</text>
+    </view>
+    <view class="info-row" wx:if="{{member.branch_name}}">
+      <text class="label">所属支部</text>
+      <text class="value">{{member.branch_name}}</text>
+    </view>
+    <view class="info-row" wx:if="{{member.work_unit}}">
+      <text class="label">工作单位</text>
+      <text class="value">{{member.work_unit}}</text>
+    </view>
+    <view class="info-row" wx:if="{{member.work_position}}">
+      <text class="label">职务</text>
+      <text class="value">{{member.work_position}}</text>
+    </view>
+    <view class="info-row" wx:if="{{member.title}}">
+      <text class="label">职称</text>
+      <text class="value">{{member.title}}</text>
+    </view>
+    <view class="info-row" wx:if="{{member.education}}">
+      <text class="label">学历</text>
+      <text class="value">{{member.education}}</text>
+    </view>
+    <view class="info-row" wx:if="{{member.school}}">
+      <text class="label">毕业院校</text>
+      <text class="value">{{member.school}}</text>
+    </view>
+    <view class="info-row" wx:if="{{member.specialty}}">
+      <text class="label">专业</text>
+      <text class="value">{{member.specialty}}</text>
+    </view>
+    <view class="info-row" wx:if="{{member.social_position}}">
+      <text class="label">社会职务</text>
+      <text class="value">{{member.social_position}}</text>
+    </view>
+  </view>
+</view>

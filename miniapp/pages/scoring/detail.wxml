@@ -1,0 +1,10 @@
+<view class="page">
+  <view class="record-item" wx:for="{{records}}" wx:key="id">
+    <view class="r-info">
+      <text class="r-desc">{{item.description || item.name || item.event}}</text>
+      <text class="r-time">{{item.create_time || item.time}}</text>
+    </view>
+    <text class="r-score {{item.score > 0 ? 'plus' : 'minus'}}">{{item.score > 0 ? '+' : ''}}{{item.score}}</text>
+  </view>
+  <view class="empty" wx:if="{{records.length === 0}}">暂无积分记录</view>
+</view>

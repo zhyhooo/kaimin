@@ -1,0 +1,11 @@
+.page { padding: 20rpx; background: #f5f5f5; min-height: 100vh; }
+.event-card { background: #fff; border-radius: 12rpx; overflow: hidden; margin-bottom: 20rpx; box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05); }
+.cover { width: 100%; height: 280rpx; }
+.info { padding: 20rpx 24rpx; }
+.title { font-size: 32rpx; font-weight: bold; color: #333; display: block; }
+.time, .location { font-size: 26rpx; color: #666; display: block; margin-top: 10rpx; }
+.status { font-size: 22rpx; padding: 4rpx 16rpx; border-radius: 20rpx; display: inline-block; margin-top: 12rpx; }
+.status.open { background: #e8f5e9; color: #2e7d32; }
+.status.closed { background: #fff3e0; color: #e65100; }
+.status.ended { background: #eeeeee; color: #999; }
+.empty { text-align: center; color: #999; font-size: 28rpx; padding: 120rpx 0; }

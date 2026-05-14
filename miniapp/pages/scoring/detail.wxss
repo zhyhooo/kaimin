@@ -1,0 +1,10 @@
+.page { background: #fff; min-height: 100vh; padding: 20rpx; }
+.record-item { display: flex; align-items: center; padding: 24rpx 0; border-bottom: 1rpx solid #f5f5f5; }
+.record-item:last-child { border: none; }
+.r-info { flex: 1; }
+.r-desc { font-size: 28rpx; color: #333; display: block; }
+.r-time { font-size: 22rpx; color: #999; margin-top: 6rpx; display: block; }
+.r-score { font-size: 32rpx; font-weight: bold; }
+.r-score.plus { color: #C41E2E; }
+.r-score.minus { color: #999; }
+.empty { text-align: center; color: #999; font-size: 28rpx; padding: 120rpx 0; }

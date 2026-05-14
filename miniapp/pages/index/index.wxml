@@ -1,0 +1,64 @@
+<view class="page">
+  <!-- 顶部用户卡片 -->
+  <view class="user-card" bindtap="goProfile">
+    <image class="avatar" src="{{member.avatar || '/assets/default-avatar.png'}}" mode="aspectFill" />
+    <view class="user-info">
+      <text class="name">{{member.name || '点击登录'}}</text>
+      <text class="branch">{{member.org_position || ''}}</text>
+    </view>
+    <view class="badge" wx:if="{{unreadCount > 0}}">{{unreadCount}}</view>
+  </view>
+
+  <!-- 最新通知 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="title">最新通知</text>
+      <text class="more" bindtap="goNotice">全部 →</text>
+    </view>
+    <view class="notice-list">
+      <view class="notice-item" wx:for="{{notices}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+        <view class="dot {{item.is_read ? '' : 'unread'}}"></view>
+        <view class="content">
+          <text class="n-title">{{item.title}}</text>
+          <text class="n-time">{{item.publish_time}}</text>
+        </view>
+      </view>
+      <view class="empty" wx:if="{{notices.length === 0}}">暂无通知</view>
+    </view>
+  </view>
+
+  <!-- 近期活动 -->
+  <view class="section" wx:if="{{recentEvent}}">
+    <view class="section-header">
+      <text class="title">近期活动</text>
+    </view>
+    <view class="event-card" bindtap="goEvent" data-id="{{recentEvent.id}}">
+      <image class="e-cover" src="{{recentEvent.cover_image}}" mode="aspectFill" wx:if="{{recentEvent.cover_image}}" />
+      <view class="e-info">
+        <text class="e-title">{{recentEvent.title}}</text>
+        <text class="e-time">🕐 {{recentEvent.event_time}}</text>
+        <text class="e-location">📍 {{recentEvent.location}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷入口 -->
+  <view class="grid">
+    <view class="grid-item" bindtap="goNotice">
+      <text class="icon">📢</text>
+      <text>通知公告</text>
+    </view>
+    <navigator class="grid-item" url="/pages/event/event">
+      <text class="icon">📅</text>
+      <text>活动报名</text>
+    </navigator>
+    <navigator class="grid-item" url="/pages/member/member">
+      <text class="icon">👥</text>
+      <text>通讯录</text>
+    </navigator>
+    <navigator class="grid-item" url="/pages/learning/learning">
+      <text class="icon">📚</text>
+      <text>学习园地</text>
+    </navigator>
+  </view>
+</view>

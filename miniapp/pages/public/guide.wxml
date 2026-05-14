@@ -1,0 +1,8 @@
+<view class="page" wx:if="{{guide}}">
+  <view class="header">
+    <text class="title">{{guide.title}}</text>
+  </view>
+  <view class="body">
+    <rich-text nodes="{{guide.content}}"></rich-text>
+  </view>
+</view>
