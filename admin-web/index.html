@@ -70,13 +70,16 @@ tr:hover{background:#f5f9ff}
     <div v-if="canManageScoring" class="nav-item" :class="{active:page==='scoring'}" @click="page='scoring';loadRules()">⭐ 积分规则</div>
     <div v-if="canManageNotif" class="nav-item" :class="{active:page==='notifications'}" @click="page='notifications';loadNotifications()">🔔 通知管理</div>
     <div v-if="isSuperAdmin" class="nav-item" :class="{active:page==='settings'}" @click="page='settings'">⚙️ 系统配置</div>
-    <div style="position:absolute;bottom:20px;left:20px;right:20px;color:rgba(255,255,255,.3);font-size:12px;display:flex;justify-content:space-between;align-items:center">
-      <span>v1.0 | {{user?.phone}}</span>
-      <span style="cursor:pointer;color:rgba(255,255,255,.5)" @click="logout" title="退出登录">🚪</span>
-    </div>
+    <div style="position:absolute;bottom:20px;left:20px;color:rgba(255,255,255,.3);font-size:12px">v1.0 | {{user?.phone}}</div>
   </div>
 
   <div class="main">
+    <!-- 顶部栏 -->
+    <div v-if="token" style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:16px;gap:12px">
+      <span style="font-size:13px;color:#999">{{user?.phone}} | {{roleLabel(user?.role)}}</span>
+      <button class="btn btn-danger btn-sm" @click="logout">退出登录</button>
+    </div>
+
     <!-- 登录/注册页 -->
     <div v-if="!token" class="card" style="max-width:400px;margin:100px auto">
       <h2>{{loginMode==='login'?'管理员登录':'管理员注册'}}</h2>

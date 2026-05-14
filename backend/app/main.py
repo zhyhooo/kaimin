@@ -8,7 +8,18 @@ from slowapi.errors import RateLimitExceeded
 from app.config import get_settings
 from app.database import engine
 from app import models
-from app.routers import auth, members, branches, notifications, events, scoring, social_info, venues, learning, public, profile, users
+from app.routers.auth import router as auth_router
+from app.routers.members import router as members_router
+from app.routers.branches import router as branches_router
+from app.routers.notifications import router as notifications_router
+from app.routers.events import router as events_router
+from app.routers.scoring import router as scoring_router
+from app.routers.social_info import router as social_info_router
+from app.routers.venues import router as venues_router
+from app.routers.learning import router as learning_router
+from app.routers.public import router as public_router
+from app.routers.profile import router as profile_router
+from app.routers.users import router as users_router
 
 settings = get_settings()
 
@@ -43,18 +54,18 @@ if admin_path.exists():
     app.mount("/admin", StaticFiles(directory=str(admin_path), html=True), name="admin")
 
 # 注册路由
-app.include_router(auth.router)
-app.include_router(members.router)
-app.include_router(branches.router)
-app.include_router(notifications.router)
-app.include_router(events.router)
-app.include_router(scoring.router)
-app.include_router(social_info.router)
-app.include_router(venues.router)
-app.include_router(learning.router)
-app.include_router(public.router)
-app.include_router(profile.router)
-app.include_router(users.router)
+app.include_router(auth_router)
+app.include_router(members_router)
+app.include_router(branches_router)
+app.include_router(notifications_router)
+app.include_router(events_router)
+app.include_router(scoring_router)
+app.include_router(social_info_router)
+app.include_router(venues_router)
+app.include_router(learning_router)
+app.include_router(public_router)
+app.include_router(profile_router)
+app.include_router(users_router)
 
 
 @app.get("/")
