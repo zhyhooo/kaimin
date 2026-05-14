@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User, Member, UserRole, Branch
-from app.auth import create_token, verify_token, get_current_user, require_admin
+from app.auth import create_token, verify_token, get_current_user, require_admin, pwd_context
 from datetime import datetime
 import httpx
 
@@ -16,6 +16,12 @@ class WechatLoginRequest(BaseModel):
 
 class PhoneLoginRequest(BaseModel):
     phone: str = Field(..., pattern=r'^1[3-9]\d{9}$')
+    password: str | None = None
+
+
+class RegisterRequest(BaseModel):
+    phone: str = Field(..., pattern=r'^1[3-9]\d{9}$')
+    password: str = Field(..., min_length=6, max_length=50)
 
 
 class TokenResponse(BaseModel):
@@ -84,16 +90,45 @@ async def bind_phone(req: PhoneLoginRequest, current_user: User = Depends(get_cu
     raise HTTPException(status_code=501, detail="绑定流程待实现（需与会员导入流程对接）")
 
 
+@router.post("/register", response_model=TokenResponse)
+async def register(req: RegisterRequest, db: Session = Depends(get_db)):
+    """管理员注册（仅限超级管理员角色）"""
+    existing = db.query(User).filter(User.phone == req.phone).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="该手机号已注册")
+
+    user = User(
+        phone=req.phone,
+        password_hash=pwd_context.hash(req.password),
+        role=UserRole.SUPER_ADMIN,
+        is_active=True
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    token = create_token({"sub": str(user.id), "role": user.role.value})
+    return TokenResponse(access_token=token, role=user.role.value)
+
+
 @router.post("/admin-login", response_model=TokenResponse)
 async def admin_login(req: PhoneLoginRequest, db: Session = Depends(get_db)):
     """管理员账号密码登录（Web后台用）"""
     user = db.query(User).filter(
         User.phone == req.phone,
-        User.role.in_([UserRole.ORG_LEADER, UserRole.SUPER_ADMIN])
+        User.role.in_([UserRole.ORG_LEADER, UserRole.SUPER_ADMIN, UserRole.BRANCH_LEADER])
     ).first()
 
     if not user:
         raise HTTPException(status_code=401, detail="账号不存在或非管理员")
+
+    # 如果用户设置了密码，则验证密码
+    if user.password_hash:
+        if not req.password:
+            raise HTTPException(status_code=401, detail="请输入密码")
+        if not pwd_context.verify(req.password, user.password_hash):
+            raise HTTPException(status_code=401, detail="密码错误")
+    # 没有密码的用户（旧数据）允许无密码登录
 
     user.last_login = datetime.now()
     db.commit()

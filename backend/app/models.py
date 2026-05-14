@@ -30,6 +30,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     phone = Column(String(11), unique=True, nullable=False, index=True, comment="手机号(加密存储)")
+    password_hash = Column(String(256), nullable=True, comment="密码哈希(管理员登录用)")
     openid = Column(String(128), unique=True, nullable=True, comment="微信OpenID")
     unionid = Column(String(128), nullable=True, comment="微信UnionID")
     role = Column(SAEnum(UserRole), default=UserRole.PUBLIC, comment="用户角色")

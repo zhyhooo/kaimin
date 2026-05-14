@@ -63,21 +63,30 @@ tr:hover{background:#f5f9ff}
     <div class="nav-item" :class="{active:page==='dashboard'}" @click="page='dashboard'">📊 数据仪表盘</div>
     <div v-if="isSuperAdmin" class="nav-item" :class="{active:page==='users'}" @click="page='users';loadUsers()">👤 用户管理</div>
     <div v-if="canManageMembers" class="nav-item" :class="{active:page==='members'}" @click="page='members';loadMembers()">👥 会员管理</div>
+    <div v-if="canManageMembers" class="nav-item" :class="{active:page==='branches'}" @click="page='branches';loadBranches()">🏛️ 支部管理</div>
     <div v-if="canManageEvents" class="nav-item" :class="{active:page==='events'}" @click="page='events';loadEvents()">📅 活动管理</div>
     <div v-if="canManageSocial" class="nav-item" :class="{active:page==='social'}" @click="page='social';loadSocial()">📝 社情民意</div>
     <div v-if="canManageVenues" class="nav-item" :class="{active:page==='venues'}" @click="page='venues';loadVenues()">🏠 阵地管理</div>
     <div v-if="canManageScoring" class="nav-item" :class="{active:page==='scoring'}" @click="page='scoring';loadRules()">⭐ 积分规则</div>
     <div v-if="canManageNotif" class="nav-item" :class="{active:page==='notifications'}" @click="page='notifications';loadNotifications()">🔔 通知管理</div>
     <div v-if="isSuperAdmin" class="nav-item" :class="{active:page==='settings'}" @click="page='settings'">⚙️ 系统配置</div>
-    <div style="position:absolute;bottom:20px;left:20px;color:rgba(255,255,255,.3);font-size:12px">v1.0 | {{user?.phone}}</div>
+    <div style="position:absolute;bottom:20px;left:20px;right:20px;color:rgba(255,255,255,.3);font-size:12px;display:flex;justify-content:space-between;align-items:center">
+      <span>v1.0 | {{user?.phone}}</span>
+      <span style="cursor:pointer;color:rgba(255,255,255,.5)" @click="logout" title="退出登录">🚪</span>
+    </div>
   </div>
 
   <div class="main">
-    <!-- 登录页 -->
+    <!-- 登录/注册页 -->
     <div v-if="!token" class="card" style="max-width:400px;margin:100px auto">
-      <h2>管理员登录</h2>
+      <h2>{{loginMode==='login'?'管理员登录':'管理员注册'}}</h2>
       <div class="form-group"><label>手机号</label><input v-model="loginPhone" placeholder="请输入手机号"></div>
-      <button class="btn btn-primary" @click="doLogin" style="width:100%;padding:10px">登录</button>
+      <div class="form-group"><label>密码</label><input type="password" v-model="loginPassword" placeholder="请输入密码（至少6位）"></div>
+      <button class="btn btn-primary" @click="doLogin" style="width:100%;padding:10px;margin-bottom:12px">{{loginMode==='login'?'登录':'注册'}}</button>
+      <div style="text-align:center;font-size:13px;color:#999">
+        <span v-if="loginMode==='login'">没有账号？<a href="#" @click.prevent="loginMode='register';loginPassword=''" style="color:#1890ff">立即注册</a></span>
+        <span v-else>已有账号？<a href="#" @click.prevent="loginMode='login';loginPassword=''" style="color:#1890ff">去登录</a></span>
+      </div>
     </div>
 
     <!-- 仪表盘 -->
@@ -139,6 +148,8 @@ tr:hover{background:#f5f9ff}
             <input v-model="memberKeyword" placeholder="搜索姓名/单位..." @keyup.enter="loadMembers()">
             <button class="btn btn-primary" @click="loadMembers()" style="margin-left:8px">搜索</button>
             <button class="btn btn-success" @click="showMemberModal=true;editingMember=null;memberForm={name:'',phone:'',branch_id:null,org_position:'',join_date:''}">+ 新增会员</button>
+            <button class="btn btn-warning" @click="showImportModal=true;importResult=null">📥 批量导入</button>
+            <button class="btn btn-default" @click="downloadTemplate">📋 下载模板</button>
           </div>
         </div>
         <table><tr><th>ID</th><th>姓名</th><th>性别</th><th>支部</th><th>会内职务</th><th>入会时间</th><th>状态</th><th>操作</th></tr>
@@ -185,6 +196,52 @@ tr:hover{background:#f5f9ff}
           </div>
           <button class="btn btn-primary" @click="saveMember">保存</button>
           <button class="btn btn-default" @click="showMemberModal=false">取消</button>
+        </div>
+      </div>
+      <!-- 批量导入弹窗 -->
+      <div v-if="showImportModal" class="modal-overlay" @click.self="showImportModal=false">
+        <div class="modal" style="width:650px">
+          <h2>📥 批量导入会员</h2>
+          <div style="background:#f6ffed;border:1px solid #b7eb8f;border-radius:4px;padding:12px;margin-bottom:16px;font-size:13px">
+            <strong>📋 Excel 格式说明</strong>
+            <table style="margin-top:8px;font-size:12px">
+              <tr style="background:#f6ffed"><th style="background:#f6ffed;width:100px">列名</th><th style="background:#f6ffed;width:60px">必填</th><th style="background:#f6ffed">说明</th></tr>
+              <tr><td>姓名</td><td style="color:#52c41a">✅</td><td>会员真实姓名</td></tr>
+              <tr><td>手机号</td><td style="color:#52c41a">✅</td><td>11位手机号，不可重复</td></tr>
+              <tr><td>身份证号</td><td></td><td>18位，自动推算性别和出生年月</td></tr>
+              <tr><td>支部名称</td><td></td><td>需与系统中支部名称一致</td></tr>
+              <tr><td>会内职务</td><td></td><td>如：主委、副主委、会员</td></tr>
+              <tr><td>工作单位</td><td></td><td></td></tr>
+              <tr><td>工作职务</td><td></td><td></td></tr>
+              <tr><td>职称</td><td></td><td></td></tr>
+              <tr><td>学历</td><td></td><td></td></tr>
+              <tr><td>毕业院校</td><td></td><td></td></tr>
+              <tr><td>专业特长</td><td></td><td></td></tr>
+              <tr><td>社会职务</td><td></td><td></td></tr>
+              <tr><td>籍贯</td><td></td><td></td></tr>
+              <tr><td>入会时间</td><td></td><td>格式：2024-01-01 / 2024/01/01 / 20240101</td></tr>
+            </table>
+            <div style="margin-top:8px">
+              <a href="#" @click.prevent="downloadTemplate" style="color:#1890ff">📥 下载Excel模板</a>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>选择Excel文件（.xlsx / .xls）</label>
+            <input type="file" ref="fileInput" accept=".xlsx,.xls" @change="onFileSelected">
+          </div>
+          <div v-if="importing" style="text-align:center;padding:12px;color:#1890ff">正在导入中...</div>
+          <div v-if="importResult" style="margin-top:12px">
+            <div :style="{padding:'12px',borderRadius:'4px',background:importResult.error_count>0?'#fff7e6':'#f6ffed',border:'1px solid '+(importResult.error_count>0?'#ffd591':'#b7eb8f')}">
+              <strong>{{importResult.message}}</strong>
+            </div>
+            <div v-if="importResult.errors && importResult.errors.length>0" style="margin-top:8px;max-height:200px;overflow-y:auto;font-size:12px">
+              <div v-for="(err,i) in importResult.errors" :key="i" style="color:#ff4d4f;padding:2px 0">{{err}}</div>
+            </div>
+          </div>
+          <div style="margin-top:16px;text-align:right">
+            <button class="btn btn-primary" @click="doImport" :disabled="!selectedFile||importing">{{importing?'导入中...':'开始导入'}}</button>
+            <button class="btn btn-default" @click="showImportModal=false;selectedFile=null;importResult=null">关闭</button>
+          </div>
         </div>
       </div>
     </div>
@@ -254,6 +311,47 @@ tr:hover{background:#f5f9ff}
           <div class="form-group"><label><input type="checkbox" v-model="socialForm.is_joint"> 联合提交</label></div>
           <button class="btn btn-primary" @click="saveSocial">保存</button>
           <button class="btn btn-default" @click="showSocialModal=false">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 支部管理 -->
+    <div v-else-if="page==='branches'">
+      <div class="card">
+        <div class="toolbar">
+          <h2 style="border:none;margin:0;padding:0">支部列表</h2>
+          <button class="btn btn-success" @click="showBranchModal=true;editingBranch=null;branchForm={name:'',parent_id:null,leader_name:'',leader_phone:'',sort_order:0}">+ 新建支部</button>
+        </div>
+        <table><tr><th>ID</th><th>名称</th><th>上级支部</th><th>主委</th><th>主委电话</th><th>会员数</th><th>排序</th><th>操作</th></tr>
+        <tr v-for="b in branchList" :key="b.id">
+          <td>{{b.id}}</td><td>{{b.name}}</td>
+          <td>{{b.parent_id?branchList.find(x=>x.id===b.parent_id)?.name||'-':'（总支）'}}</td>
+          <td>{{b.leader_name||'-'}}</td><td>{{b.leader_phone||'-'}}</td>
+          <td>{{b.member_count||0}}</td><td>{{b.sort_order}}</td>
+          <td>
+            <button class="btn btn-default btn-sm" @click="editBranch(b)">编辑</button>
+            <button class="btn btn-danger btn-sm" @click="deleteBranch(b.id)">删除</button>
+          </td>
+        </tr></table>
+      </div>
+      <!-- 支部弹窗 -->
+      <div v-if="showBranchModal" class="modal-overlay" @click.self="showBranchModal=false">
+        <div class="modal">
+          <h2>{{editingBranch?'编辑':'新建'}}支部</h2>
+          <div class="form-group"><label>支部名称 *</label><input v-model="branchForm.name" placeholder="如：第一支部"></div>
+          <div class="form-group"><label>上级支部</label>
+            <select v-model="branchForm.parent_id">
+              <option :value="null">--无（作为总支）--</option>
+              <option v-for="b in branchList" :value="b.id" :key="b.id" v-if="!editingBranch||b.id!==editingBranch.id">{{b.name}}</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>主委姓名</label><input v-model="branchForm.leader_name"></div>
+            <div class="form-group"><label>主委电话</label><input v-model="branchForm.leader_phone"></div>
+          </div>
+          <div class="form-group"><label>排序</label><input type="number" v-model="branchForm.sort_order"></div>
+          <button class="btn btn-primary" @click="saveBranch">保存</button>
+          <button class="btn btn-default" @click="showBranchModal=false">取消</button>
         </div>
       </div>
     </div>
@@ -357,11 +455,16 @@ createApp({
       user: null,
       page: 'dashboard',
       loginPhone: '',
+      loginPassword: '',
+      loginMode: 'login',  // 'login' | 'register'
       stats: {},
       // 用户管理
       adminUsers: [], showUserModal: false, editingUser: null, userForm: {phone:'',role:'org_leader'},
       // 会员管理
       memberList: [], memberKeyword: '', showMemberModal: false, editingMember: null, memberForm: {}, branches: [],
+      showImportModal: false, selectedFile: null, importing: false, importResult: null,
+      // 支部管理
+      branchList: [], showBranchModal: false, editingBranch: null, branchForm: {},
       // 活动管理
       eventList: [], showEventModal: false, editingEvent: null, eventForm: {},
       // 社情民意
@@ -388,7 +491,23 @@ createApp({
       } catch(e){ if(e.response?.status===401){this.token=null;localStorage.removeItem('admin_token')}; throw e }
     },
     async doLogin(){
-      try { const res=await this.api('/auth/admin-login','POST',{phone:this.loginPhone}); this.token=res.access_token; localStorage.setItem('admin_token',res.access_token); await this.loadAll() } catch(e){ alert('登录失败') }
+      try {
+        let res
+        if(this.loginMode==='register'){
+          res = await axios.post('/auth/register', {phone:this.loginPhone, password:this.loginPassword})
+        } else {
+          res = await axios.post('/auth/admin-login', {phone:this.loginPhone, password:this.loginPassword||undefined})
+        }
+        this.token = res.data.access_token
+        localStorage.setItem('admin_token', res.data.access_token)
+        await this.loadAll()
+      } catch(e){ alert((e.response?.data?.detail)||'操作失败') }
+    },
+    logout(){
+      this.token = null
+      this.user = null
+      localStorage.removeItem('admin_token')
+      this.page = 'dashboard'
     },
     async loadAll(){
       try{
@@ -429,7 +548,7 @@ createApp({
     async toggleUser(u){ try{ await this.api('/users/'+u.id,'PUT',{is_active:!u.is_active}); await this.loadUsers() } catch(e){ alert('操作失败') } },
     async deleteUser(id){ if(!confirm('确认删除?'))return; try{ await this.api('/users/'+id,'DELETE'); await this.loadUsers() } catch(e){ alert('删除失败') } },
     // ===== 会员管理 =====
-    async loadMembers(){ try{ const url=this.memberKeyword?'/members/?keyword='+encodeURIComponent(this.memberKeyword):'/members/'; this.memberList=await this.api(url)||[] } catch(e){} },
+    async loadMembers(){ try{ const url=this.memberKeyword?'/members/?keyword='+encodeURIComponent(this.memberKeyword):'/members/'; const [mems, brs]=await Promise.all([this.api(url), this.api('/branches/')]); this.memberList=mems||[]; this.branches=brs||[] } catch(e){} },
     async saveMember(){
       try{
         const data={...this.memberForm}
@@ -441,6 +560,47 @@ createApp({
     },
     editMember(m){ this.editingMember=m; this.memberForm={name:m.name,phone:m.phone||'',id_card:m.id_card||'',branch_id:m.branch_id,org_position:m.org_position||'',join_date:m.join_date||'',work_unit:m.work_unit||'',work_position:m.work_position||'',title:m.title||'',education:m.education||'',school:m.school||'',specialty:m.specialty|| '',social_position:m.social_position|| '',native_place:m.native_place|| ''}; this.showMemberModal=true },
     async deleteMember(id){ if(!confirm('确认删除?'))return; try{ await this.api('/members/'+id,'DELETE'); await this.loadMembers() } catch(e){ alert('删除失败') } },
+    // ===== 支部管理 =====
+    async loadBranches(){ try{ this.branchList=await this.api('/branches/')||[] } catch(e){} },
+    async saveBranch(){
+      try{
+        const data={...this.branchForm}
+        if(data.parent_id) data.parent_id=parseInt(data.parent_id)
+        data.sort_order=parseInt(data.sort_order)||0
+        if(this.editingBranch){ await this.api('/branches/'+this.editingBranch.id,'PUT',data) }
+        else { await this.api('/branches/','POST',data) }
+        this.showBranchModal=false; await this.loadBranches()
+      } catch(e){ alert('保存失败: '+(e.response?.data?.detail||e.message)) }
+    },
+    editBranch(b){ this.editingBranch=b; this.branchForm={name:b.name,parent_id:b.parent_id,leader_name:b.leader_name||'',leader_phone:b.leader_phone||'',sort_order:b.sort_order||0}; this.showBranchModal=true },
+    async deleteBranch(id){ if(!confirm('确认删除该支部？'))return; try{ await this.api('/branches/'+id,'DELETE'); await this.loadBranches() } catch(e){ alert('删除失败: '+(e.response?.data?.detail||e.message)) } },
+    // 批量导入
+    onFileSelected(e){ this.selectedFile = e.target.files[0]; this.importResult = null },
+    async doImport(){
+      if(!this.selectedFile) return
+      this.importing = true
+      try{
+        const formData = new FormData()
+        formData.append('file', this.selectedFile)
+        const res = await axios.post('/members/import/excel', formData, {
+          headers: { Authorization: 'Bearer '+this.token, 'Content-Type': 'multipart/form-data' }
+        })
+        this.importResult = res.data
+        if(res.data.success_count > 0) await this.loadMembers()
+      } catch(e){ alert('导入失败: '+(e.response?.data?.detail||e.message)) }
+      this.importing = false
+    },
+    downloadTemplate(){
+      const headers = ['姓名','手机号','身份证号','支部名称','会内职务','工作单位','工作职务','职称','学历','毕业院校','专业特长','社会职务','籍贯','入会时间']
+      const example = ['张三','13800001111','330106199001011234','第一支部','会员','XX科技有限公司','工程师','高级工程师','本科','浙江大学','计算机','市政协委员','浙江杭州','2024-01-01']
+      // 用简单的CSV方式生成xlsx兼容文件（浏览器端生成）
+      const csvContent = '\uFEFF' + headers.join(',') + '\n' + example.join(',') + '\n'
+      const blob = new Blob([csvContent], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8'})
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = '会员导入模板.csv'
+      a.click(); URL.revokeObjectURL(url)
+    },
     // ===== 活动管理 =====
     async loadEvents(){ try{ this.eventList=await this.api('/events/')||[] } catch(e){} },
     async saveEvent(){

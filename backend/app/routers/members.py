@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import Optional
@@ -249,9 +249,128 @@ async def export_members(
 
 @router.post("/import/excel")
 async def import_members(
+    file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_org_leader)
 ):
-    """批量导入会员（骨架，需接收上传文件）"""
-    # TODO: 接收上传的Excel文件，解析并批量创建
-    raise HTTPException(status_code=501, detail="批量导入功能待实现")
+    """批量导入会员（Excel文件，含字段校验和错误提示）"""
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="仅支持 .xlsx 或 .xls 格式")
+
+    try:
+        contents = await file.read()
+        wb = openpyxl.load_workbook(BytesIO(contents))
+        ws = wb.active
+    except Exception:
+        raise HTTPException(status_code=400, detail="无法解析Excel文件，请检查格式")
+
+    # 读取表头（第1行）
+    rows = list(ws.iter_rows(values_only=True))
+    if len(rows) < 2:
+        raise HTTPException(status_code=400, detail="Excel文件为空或缺少数据行")
+
+    headers = [str(h).strip() if h else "" for h in rows[0]]
+    # 期望的列：姓名, 手机号, 身份证号, 支部名称, 会内职务, 工作单位, 工作职务, 职称, 学历, 毕业院校, 专业特长, 社会职务, 籍贯, 入会时间
+    col_map = {name: idx for idx, name in enumerate(headers)}
+
+    required_fields = ["姓名", "手机号"]
+    for f in required_fields:
+        if f not in col_map:
+            raise HTTPException(status_code=400, detail=f"缺少必填列: {f}")
+
+    success_count = 0
+    errors = []
+
+    for row_idx, row in enumerate(rows[1:], start=2):
+        try:
+            name = str(row[col_map["姓名"]]).strip() if col_map.get("姓名") is not None and row[col_map["姓名"]] else ""
+            phone = str(row[col_map["手机号"]]).strip() if col_map.get("手机号") is not None and row[col_map["手机号"]] else ""
+
+            if not name:
+                errors.append(f"第{row_idx}行: 姓名为空")
+                continue
+            if not phone or len(phone) != 11 or not phone.startswith("1"):
+                errors.append(f"第{row_idx}行: 手机号格式不正确 ({phone})")
+                continue
+
+            # 检查手机号是否已存在
+            existing_user = db.query(User).filter(User.phone == phone).first()
+            if existing_user:
+                errors.append(f"第{row_idx}行: 手机号 {phone} 已存在")
+                continue
+
+            # 读取可选字段
+            id_card = str(row[col_map["身份证号"]]).strip() if col_map.get("身份证号") is not None and row[col_map["身份证号"]] else None
+            branch_name = str(row[col_map["支部名称"]]).strip() if col_map.get("支部名称") is not None and row[col_map["支部名称"]] else None
+            org_position = str(row[col_map["会内职务"]]).strip() if col_map.get("会内职务") is not None and row[col_map["会内职务"]] else None
+            work_unit = str(row[col_map["工作单位"]]).strip() if col_map.get("工作单位") is not None and row[col_map["工作单位"]] else None
+            work_position = str(row[col_map["工作职务"]]).strip() if col_map.get("工作职务") is not None and row[col_map["工作职务"]] else None
+            title = str(row[col_map["职称"]]).strip() if col_map.get("职称") is not None and row[col_map["职称"]] else None
+            education = str(row[col_map["学历"]]).strip() if col_map.get("学历") is not None and row[col_map["学历"]] else None
+            school = str(row[col_map["毕业院校"]]).strip() if col_map.get("毕业院校") is not None and row[col_map["毕业院校"]] else None
+            specialty = str(row[col_map["专业特长"]]).strip() if col_map.get("专业特长") is not None and row[col_map["专业特长"]] else None
+            social_position = str(row[col_map["社会职务"]]).strip() if col_map.get("社会职务") is not None and row[col_map["社会职务"]] else None
+            native_place = str(row[col_map["籍贯"]]).strip() if col_map.get("籍贯") is not None and row[col_map["籍贯"]] else None
+            join_date_str = str(row[col_map["入会时间"]]).strip() if col_map.get("入会时间") is not None and row[col_map["入会时间"]] else None
+
+            # 查找支部
+            branch_id = None
+            if branch_name:
+                branch = db.query(Branch).filter(Branch.name == branch_name).first()
+                if branch:
+                    branch_id = branch.id
+                else:
+                    errors.append(f"第{row_idx}行: 支部 '{branch_name}' 不存在，已跳过支部关联")
+
+            # 身份证号推算性别和出生年月
+            gender = None
+            birth_date = None
+            if id_card and len(id_card) == 18:
+                try:
+                    gender_code = int(id_card[16])
+                    gender = "女" if gender_code % 2 == 0 else "男"
+                    birth_date = date(int(id_card[6:10]), int(id_card[10:12]), int(id_card[12:14]))
+                except (ValueError, IndexError):
+                    errors.append(f"第{row_idx}行: 身份证号格式有误，无法推算性别/生日")
+
+            # 解析入会时间
+            parsed_join_date = None
+            if join_date_str:
+                for fmt in ["%Y-%m-%d", "%Y/%m/%d", "%Y.%m.%d", "%Y%m%d"]:
+                    try:
+                        parsed_join_date = datetime.strptime(join_date_str, fmt).date()
+                        break
+                    except ValueError:
+                        continue
+                if not parsed_join_date:
+                    errors.append(f"第{row_idx}行: 入会时间格式无法识别 ({join_date_str})，已跳过")
+
+            # 创建 User
+            user = User(phone=phone, role=UserRole.MEMBER)
+            db.add(user)
+            db.flush()
+
+            # 创建 Member
+            member = Member(
+                user_id=user.id, name=name, id_card=id_card,
+                gender=gender, birth_date=birth_date,
+                branch_id=branch_id, org_position=org_position,
+                work_unit=work_unit, work_position=work_position,
+                title=title, education=education, school=school,
+                specialty=specialty, social_position=social_position,
+                native_place=native_place, join_date=parsed_join_date
+            )
+            db.add(member)
+            success_count += 1
+
+        except Exception as e:
+            errors.append(f"第{row_idx}行: 系统错误 - {str(e)}")
+
+    db.commit()
+
+    return {
+        "message": f"导入完成: 成功 {success_count} 条, 失败 {len(errors)} 条",
+        "success_count": success_count,
+        "error_count": len(errors),
+        "errors": errors
+    }
