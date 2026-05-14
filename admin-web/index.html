@@ -11,7 +11,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#333;background:#f0f2f5}
 #app{display:flex;min-height:100vh}
-.sidebar{width:220px;background:#001529;color:#fff;padding-top:20px;flex-shrink:0}
+.sidebar{width:220px;background:#001529;color:#fff;padding-top:20px;flex-shrink:0;position:relative}
 .sidebar .logo{text-align:center;font-size:18px;font-weight:bold;padding:0 20px 20px;border-bottom:1px solid #002140;margin-bottom:10px}
 .sidebar .logo span{color:#C41E2E}
 .nav-item{padding:14px 24px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.2s;font-size:14px;color:rgba(255,255,255,.65)}
@@ -32,20 +32,28 @@ tr:hover{background:#f5f9ff}
 .btn-primary{background:#1890ff;color:#fff}
 .btn-danger{background:#ff4d4f;color:#fff}
 .btn-success{background:#52c41a;color:#fff}
+.btn-warning{background:#faad14;color:#fff}
 .btn-default{background:#fff;border:1px solid #d9d9d9;color:#666}
 .btn:hover{opacity:.85}
+.btn-sm{padding:4px 10px;font-size:12px}
 .form-group{margin-bottom:16px}
 .form-group label{display:block;margin-bottom:6px;font-weight:500;color:#555;font-size:13px}
-.form-group input,.form-group select{width:100%;padding:8px 12px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px}
-.form-group input:focus{outline:none;border-color:#1890ff;box-shadow:0 0 0 2px rgba(24,144,255,.2)}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 12px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#1890ff;box-shadow:0 0 0 2px rgba(24,144,255,.2)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .badge{padding:2px 8px;border-radius:10px;font-size:12px}
 .badge-blue{background:#e6f7ff;color:#1890ff}
 .badge-green{background:#f6ffed;color:#52c41a}
 .badge-red{background:#fff2f0;color:#ff4d4f}
+.badge-orange{background:#fff7e6;color:#fa8c16}
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000}
-.modal{background:#fff;border-radius:8px;padding:24px;width:500px;max-height:80vh;overflow-y:auto}
+.modal{background:#fff;border-radius:8px;padding:24px;width:600px;max-height:85vh;overflow-y:auto}
+.modal h2{margin-bottom:20px;font-size:18px}
 .empty{text-align:center;color:#999;padding:40px;font-size:14px}
 .chart-box{height:300px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.toolbar input{width:240px;padding:8px 12px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px}
 </style>
 </head>
 <body>
@@ -53,15 +61,14 @@ tr:hover{background:#f5f9ff}
   <div class="sidebar">
     <div class="logo"><span>开明向阳</span> 后台</div>
     <div class="nav-item" :class="{active:page==='dashboard'}" @click="page='dashboard'">📊 数据仪表盘</div>
-    <div class="nav-item" :class="{active:page==='users'}" @click="page='users'">👤 用户管理</div>
-    <div class="nav-item" :class="{active:page==='audit'}" @click="page='audit'">✅ 档案审核</div>
-    <div class="nav-item" :class="{active:page==='members'}" @click="page='members'">👥 会员管理</div>
-    <div class="nav-item" :class="{active:page==='events'}" @click="page='events'">📅 活动管理</div>
-    <div class="nav-item" :class="{active:page==='scoring'}" @click="page='scoring'">⭐ 积分规则</div>
-    <div class="nav-item" :class="{active:page==='social'}" @click="page='social'">📝 社情民意</div>
-    <div class="nav-item" :class="{active:page==='venues'}" @click="page='venues'">🏠 阵地管理</div>
-    <div class="nav-item" :class="{active:page==='settings'}" @click="page='settings'">⚙️ 系统配置</div>
-    <div class="nav-item" :class="{active:page==='logs'}" @click="page='logs'">📋 操作日志</div>
+    <div v-if="isSuperAdmin" class="nav-item" :class="{active:page==='users'}" @click="page='users';loadUsers()">👤 用户管理</div>
+    <div v-if="canManageMembers" class="nav-item" :class="{active:page==='members'}" @click="page='members';loadMembers()">👥 会员管理</div>
+    <div v-if="canManageEvents" class="nav-item" :class="{active:page==='events'}" @click="page='events';loadEvents()">📅 活动管理</div>
+    <div v-if="canManageSocial" class="nav-item" :class="{active:page==='social'}" @click="page='social';loadSocial()">📝 社情民意</div>
+    <div v-if="canManageVenues" class="nav-item" :class="{active:page==='venues'}" @click="page='venues';loadVenues()">🏠 阵地管理</div>
+    <div v-if="canManageScoring" class="nav-item" :class="{active:page==='scoring'}" @click="page='scoring';loadRules()">⭐ 积分规则</div>
+    <div v-if="canManageNotif" class="nav-item" :class="{active:page==='notifications'}" @click="page='notifications';loadNotifications()">🔔 通知管理</div>
+    <div v-if="isSuperAdmin" class="nav-item" :class="{active:page==='settings'}" @click="page='settings'">⚙️ 系统配置</div>
     <div style="position:absolute;bottom:20px;left:20px;color:rgba(255,255,255,.3);font-size:12px">v1.0 | {{user?.phone}}</div>
   </div>
 
@@ -79,7 +86,7 @@ tr:hover{background:#f5f9ff}
         <div class="stat-card"><div class="num">{{stats.total_members||0}}</div><div class="label">会员总数</div></div>
         <div class="stat-card"><div class="num">{{stats.active_events||0}}</div><div class="label">进行中活动</div></div>
         <div class="stat-card"><div class="num">{{stats.total_infos||0}}</div><div class="label">社情民意</div></div>
-        <div class="stat-card"><div class="num">{{stats.pending_audits||0}}</div><div class="label">待审核</div></div>
+        <div class="stat-card"><div class="num">{{stats.pending_bookings||0}}</div><div class="label">待审批预约</div></div>
       </div>
       <div class="card"><h2>活动参与率</h2><div class="chart-box" id="chart-events" ref="chartEvents"></div></div>
       <div class="card"><h2>社情民意趋势</h2><div class="chart-box" id="chart-infos" ref="chartInfos"></div></div>
@@ -88,80 +95,166 @@ tr:hover{background:#f5f9ff}
     <!-- 用户管理 -->
     <div v-else-if="page==='users'">
       <div class="card">
-        <h2>管理员账号</h2>
+        <div class="toolbar">
+          <h2 style="border:none;margin:0;padding:0">管理员账号</h2>
+          <button class="btn btn-primary" @click="showUserModal=true;editingUser=null;userForm={phone:'',role:'org_leader'}">+ 新增管理员</button>
+        </div>
         <table><tr><th>ID</th><th>手机号</th><th>角色</th><th>状态</th><th>最后登录</th><th>操作</th></tr>
         <tr v-for="u in adminUsers" :key="u.id">
           <td>{{u.id}}</td><td>{{u.phone}}</td>
-          <td><span class="badge" :class="u.role==='super_admin'?'badge-red':'badge-blue'">{{u.role}}</span></td>
-          <td>{{u.is_active?'启用':'禁用'}}</td><td>{{u.last_login}}</td>
-          <td><button class="btn btn-default" @click="toggleUser(u)">{{u.is_active?'禁用':'启用'}}</button></td>
+          <td><span class="badge" :class="u.role==='super_admin'?'badge-red':'badge-blue'">{{roleLabel(u.role)}}</span></td>
+          <td><span :style="{color:u.is_active?'#52c41a':'#ff4d4f'}">{{u.is_active?'启用':'禁用'}}</span></td>
+          <td>{{fmtTime(u.last_login)}}</td>
+          <td>
+            <button class="btn btn-default btn-sm" @click="editUser(u)">编辑</button>
+            <button class="btn btn-sm" :class="u.is_active?'btn-warning':'btn-success'" @click="toggleUser(u)">{{u.is_active?'禁用':'启用'}}</button>
+            <button class="btn btn-danger btn-sm" @click="deleteUser(u.id)">删除</button>
+          </td>
         </tr></table>
       </div>
-      <div class="card"><h2>角色权限</h2><table><tr><th>角色</th><th>菜单权限</th><th>数据权限</th></tr>
-      <tr v-for="r in roles" :key="r.name"><td>{{r.label}}</td><td>{{r.menus.join(', ')}}</td><td>{{r.dataScope}}</td></tr></table></div>
-    </div>
-
-    <!-- 档案审核 -->
-    <div v-else-if="page==='audit'">
-      <div class="card"><h2>待审核档案修改</h2>
-        <div v-if="audits.length===0" class="empty">暂无待审核项</div>
-        <table v-else><tr><th>会员</th><th>修改字段</th><th>修改内容</th><th>时间</th><th>操作</th></tr>
-        <tr v-for="a in audits" :key="a.id"><td>{{a.member_name}}</td><td>{{a.field}}</td><td>{{a.new_value}}</td><td>{{a.created_at}}</td>
-          <td><button class="btn btn-success" @click="approveAudit(a.id)">通过</button>
-              <button class="btn btn-danger" @click="rejectAudit(a.id)">驳回</button></td>
-        </tr></table>
+      <!-- 用户弹窗 -->
+      <div v-if="showUserModal" class="modal-overlay" @click.self="showUserModal=false">
+        <div class="modal">
+          <h2>{{editingUser?'编辑':'新增'}}管理员</h2>
+          <div class="form-group"><label>手机号</label><input v-model="userForm.phone" placeholder="请输入手机号"></div>
+          <div class="form-group"><label>角色</label>
+            <select v-model="userForm.role">
+              <option value="super_admin">超级管理员</option>
+              <option value="org_leader">总支委员</option>
+              <option value="branch_leader">支部打胎</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" @click="saveUser">保存</button>
+          <button class="btn btn-default" @click="showUserModal=false">取消</button>
+        </div>
       </div>
     </div>
 
     <!-- 会员管理 -->
     <div v-else-if="page==='members'">
       <div class="card">
-        <h2>会员列表</h2>
-        <table><tr><th>ID</th><th>姓名</th><th>支部</th><th>会内职务</th><th>入会时间</th><th>状态</th></tr>
-        <tr v-for="m in memberList" :key="m.id"><td>{{m.id}}</td><td>{{m.name}}</td><td>{{m.branch_name}}</td><td>{{m.org_position}}</td><td>{{m.join_date}}</td><td>{{m.status}}</td></tr></table>
+        <div class="toolbar">
+          <h2 style="border:none;margin:0;padding:0">会员列表</h2>
+          <div>
+            <input v-model="memberKeyword" placeholder="搜索姓名/单位..." @keyup.enter="loadMembers()">
+            <button class="btn btn-primary" @click="loadMembers()" style="margin-left:8px">搜索</button>
+            <button class="btn btn-success" @click="showMemberModal=true;editingMember=null;memberForm={name:'',phone:'',branch_id:null,org_position:'',join_date:''}">+ 新增会员</button>
+          </div>
+        </div>
+        <table><tr><th>ID</th><th>姓名</th><th>性别</th><th>支部</th><th>会内职务</th><th>入会时间</th><th>状态</th><th>操作</th></tr>
+        <tr v-for="m in memberList" :key="m.id">
+          <td>{{m.id}}</td><td>{{m.name}}</td><td>{{m.gender||'-'}}</td><td>{{m.branch_name||'-'}}</td><td>{{m.org_position||'-'}}</td><td>{{m.join_date||'-'}}</td>
+          <td><span class="badge" :class="m.status==='active'?'badge-green':(m.status==='pending'?'badge-orange':'badge-red')">{{statusLabel(m.status)}}</span></td>
+          <td>
+            <button class="btn btn-default btn-sm" @click="editMember(m)">编辑</button>
+            <button class="btn btn-danger btn-sm" @click="deleteMember(m.id)">删除</button>
+          </td>
+        </tr></table>
+      </div>
+      <!-- 会员弹窗 -->
+      <div v-if="showMemberModal" class="modal-overlay" @click.self="showMemberModal=false">
+        <div class="modal">
+          <h2>{{editingMember?'编辑':'新增'}}会员</h2>
+          <div class="form-row">
+            <div class="form-group"><label>姓名 *</label><input v-model="memberForm.name"></div>
+            <div class="form-group"><label>手机号 *</label><input v-model="memberForm.phone"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>身份证号</label><input v-model="memberForm.id_card"></div>
+            <div class="form-group"><label>支部</label><select v-model="memberForm.branch_id"><option :value="null">--选择--</option><option v-for="b in branches" :value="b.id" :key="b.id">{{b.name}}</option></select></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>会内职务</label><input v-model="memberForm.org_position"></div>
+            <div class="form-group"><label>入会时间</label><input type="date" v-model="memberForm.join_date"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>工作单位</label><input v-model="memberForm.work_unit"></div>
+            <div class="form-group"><label>工作职务</label><input v-model="memberForm.work_position"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>职称</label><input v-model="memberForm.title"></div>
+            <div class="form-group"><label>学历</label><input v-model="memberForm.education"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>毕业院校</label><input v-model="memberForm.school"></div>
+            <div class="form-group"><label>专业特长</label><input v-model="memberForm.specialty"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>社会职务</label><input v-model="memberForm.social_position"></div>
+            <div class="form-group"><label>籍贯</label><input v-model="memberForm.native_place"></div>
+          </div>
+          <button class="btn btn-primary" @click="saveMember">保存</button>
+          <button class="btn btn-default" @click="showMemberModal=false">取消</button>
+        </div>
       </div>
     </div>
 
     <!-- 活动管理 -->
     <div v-else-if="page==='events'">
-      <div class="card"><h2>活动统计</h2><p>活动参与率与支部活跃度排行（仪表盘已展示）</p></div>
-    </div>
-
-    <!-- 积分规则 -->
-    <div v-else-if="page==='scoring'">
       <div class="card">
-        <h2>积分规则配置</h2>
-        <table><tr><th>维度</th><th>活动类型</th><th>单次分值</th><th>上限</th><th>周期</th><th>操作</th></tr>
-        <tr v-for="r in scoreRules" :key="r.id"><td>{{r.dimension}}</td><td>{{r.activity_type}}</td><td>{{r.score}}</td><td>{{r.max_score||'无'}}</td><td>{{r.period==='year'?'年度':'季度'}}</td>
-          <td><button class="btn btn-default" @click="editRule(r)">编辑</button></td>
+        <div class="toolbar">
+          <h2 style="border:none;margin:0;padding:0">活动列表</h2>
+          <button class="btn btn-success" @click="showEventModal=true;editingEvent=null;eventForm={title:'',event_time:'',location:'',max_participants:0,description:'',cover_image:''}">+ 新增活动</button>
+        </div>
+        <table><tr><th>ID</th><th>标题</th><th>时间</th><th>地点</th><th>报名/上限</th><th>状态</th><th>操作</th></tr>
+        <tr v-for="e in eventList" :key="e.id">
+          <td>{{e.id}}</td><td>{{e.title}}</td><td>{{e.event_time}}</td><td>{{e.location||'-'}}</td><td>{{e.signup_count||0}}/{{e.max_participants||'不限'}}</td>
+          <td><span class="badge" :class="e.status==='published'?'badge-green':(e.status==='draft'?'badge-orange':'badge-blue')">{{e.status}}</span></td>
+          <td>
+            <button class="btn btn-default btn-sm" @click="editEvent(e)">编辑</button>
+            <button class="btn btn-danger btn-sm" @click="deleteEvent(e.id)">删除</button>
+          </td>
         </tr></table>
-        <button class="btn btn-primary" style="margin-top:12px" @click="showAddRule=true">+ 新增规则</button>
-        <div v-if="showAddRule" class="modal-overlay" @click.self="showAddRule=false">
-          <div class="modal">
-            <h2>新增积分规则</h2>
-            <div class="form-group"><label>维度</label><select v-model="newRule.dimension"><option v-for="d in dims" :value="d.value" :key="d.value">{{d.label}}</option></select></div>
-            <div class="form-group"><label>活动类型</label><input v-model="newRule.activity_type"></div>
-            <div class="form-group"><label>单次分值</label><input type="number" v-model="newRule.score"></div>
-            <div class="form-group"><label>上限分值</label><input type="number" v-model="newRule.max_score"></div>
-            <button class="btn btn-primary" @click="saveRule">保存</button>
-            <button class="btn btn-default" @click="showAddRule=false">取消</button>
+      </div>
+      <!-- 活动弹窗 -->
+      <div v-if="showEventModal" class="modal-overlay" @click.self="showEventModal=false">
+        <div class="modal">
+          <h2>{{editingEvent?'编辑':'新增'}}活动</h2>
+          <div class="form-group"><label>标题 *</label><input v-model="eventForm.title"></div>
+          <div class="form-row">
+            <div class="form-group"><label>活动时间 *</label><input type="datetime-local" v-model="eventForm.event_time"></div>
+            <div class="form-group"><label>地点</label><input v-model="eventForm.location"></div>
           </div>
+          <div class="form-row">
+            <div class="form-group"><label>报名上限</label><input type="number" v-model="eventForm.max_participants"></div>
+            <div class="form-group"><label>封面图URL</label><input v-model="eventForm.cover_image"></div>
+          </div>
+          <div class="form-group"><label>描述</label><textarea v-model="eventForm.description"></textarea></div>
+          <button class="btn btn-primary" @click="saveEvent">保存</button>
+          <button class="btn btn-default" @click="showEventModal=false">取消</button>
         </div>
       </div>
     </div>
 
-    <!-- 社情民意管理 -->
+    <!-- 社情民意 -->
     <div v-else-if="page==='social'">
-      <div class="card"><h2>社情民意列表</h2>
+      <div class="card">
+        <div class="toolbar">
+          <h2 style="border:none;margin:0;padding:0">社情民意列表</h2>
+          <button class="btn btn-success" @click="showSocialModal=true;editingSocial=null;socialForm={title:'',content:'',is_joint:false}">+ 新增社情民意</button>
+        </div>
         <table><tr><th>标题</th><th>作者</th><th>支部</th><th>状态</th><th>时间</th><th>操作</th></tr>
-        <tr v-for="i in socialList" :key="i.id"><td>{{i.title}}</td><td>{{i.author_name}}</td><td>{{i.branch_name}}</td>
-          <td><span class="badge" :class="i.status==='city_adopted'||i.status==='province_adopted'||i.status==='national_adopted'?'badge-green':(i.status==='rejected'?'badge-red':'badge-blue')">{{statusLabel(i.status)}}</span></td>
-          <td>{{i.created_at}}</td>
+        <tr v-for="i in socialList" :key="i.id">
+          <td>{{i.title}}</td><td>{{i.author_name||'-'}}</td><td>{{i.branch_name||'-'}}</td>
+          <td><span class="badge" :class="i.status==='city_adopted'||i.status==='province_adopted'||i.status==='national_adopted'?'badge-green':(i.status==='rejected'?'badge-red':'badge-blue')">{{socialStatusLabel(i.status)}}</span></td>
+          <td>{{fmtTime(i.created_at)}}</td>
           <td>
             <select v-model="adoptLevel[i.id]" style="width:100px;padding:4px"><option value="">--录用--</option><option value="city">市级</option><option value="province">省级</option><option value="national">全国</option></select>
-            <button class="btn btn-primary" @click="adoptInfo(i.id)">确认</button>
+            <button class="btn btn-primary btn-sm" @click="adoptInfo(i.id)">确认</button>
+            <button class="btn btn-danger btn-sm" @click="deleteSocial(i.id)">删除</button>
           </td>
         </tr></table>
+      </div>
+      <!-- 社情民意弹窗 -->
+      <div v-if="showSocialModal" class="modal-overlay" @click.self="showSocialModal=false">
+        <div class="modal">
+          <h2>{{editingSocial?'编辑':'新增'}}社情民意</h2>
+          <div class="form-group"><label>标题 *</label><input v-model="socialForm.title"></div>
+          <div class="form-group"><label>正文 *</label><textarea v-model="socialForm.content" style="min-height:150px"></textarea></div>
+          <div class="form-group"><label><input type="checkbox" v-model="socialForm.is_joint"> 联合提交</label></div>
+          <button class="btn btn-primary" @click="saveSocial">保存</button>
+          <button class="btn btn-default" @click="showSocialModal=false">取消</button>
+        </div>
       </div>
     </div>
 
@@ -171,9 +264,69 @@ tr:hover{background:#f5f9ff}
         <div v-if="pendingBookings.length===0" class="empty">暂无待审批预约</div>
         <table v-else><tr><th>场地</th><th>日期</th><th>时段</th><th>用途</th><th>人数</th><th>联系人</th><th>操作</th></tr>
         <tr v-for="b in pendingBookings" :key="b.id"><td>{{b.venue_id}}</td><td>{{b.date}}</td><td>{{b.time_slot}}</td><td>{{b.purpose}}</td><td>{{b.people_count}}</td><td>{{b.contact_name}} {{b.contact_phone}}</td>
-          <td><button class="btn btn-success" @click="approveBooking(b.id)">通过</button>
-              <button class="btn btn-danger" @click="rejectBooking(b.id)">驳回</button></td>
+          <td><button class="btn btn-success btn-sm" @click="approveBooking(b.id)">通过</button>
+              <button class="btn btn-danger btn-sm" @click="rejectBooking(b.id)">驳回</button></td>
         </tr></table>
+      </div>
+    </div>
+
+    <!-- 积分规则 -->
+    <div v-else-if="page==='scoring'">
+      <div class="card">
+        <div class="toolbar">
+          <h2 style="border:none;margin:0;padding:0">积分规则配置</h2>
+          <button class="btn btn-success" @click="showAddRule=true;editingRule=null;newRule={dimension:'meeting',activity_type:'',score:5,max_score:20}">+ 新增规则</button>
+        </div>
+        <table><tr><th>维度</th><th>活动类型</th><th>单次分值</th><th>上限</th><th>周期</th><th>操作</th></tr>
+        <tr v-for="r in scoreRules" :key="r.id"><td>{{dimLabel(r.dimension)}}</td><td>{{r.activity_type}}</td><td>{{r.score}}</td><td>{{r.max_score||'无'}}</td><td>{{r.period==='year'?'年度':'季度'}}</td>
+          <td>
+            <button class="btn btn-default btn-sm" @click="editRule(r)">编辑</button>
+            <button class="btn btn-danger btn-sm" @click="deleteRule(r.id)">删除</button>
+          </td>
+        </tr></table>
+      </div>
+      <!-- 积分规则弹窗 -->
+      <div v-if="showAddRule" class="modal-overlay" @click.self="showAddRule=false">
+        <div class="modal">
+          <h2>{{editingRule?'编辑':'新增'}}积分规则</h2>
+          <div class="form-group"><label>维度</label><select v-model="newRule.dimension"><option v-for="d in dims" :value="d.value" :key="d.value">{{d.label}}</option></select></div>
+          <div class="form-group"><label>活动类型</label><input v-model="newRule.activity_type"></div>
+          <div class="form-row">
+            <div class="form-group"><label>单次分值</label><input type="number" v-model="newRule.score"></div>
+            <div class="form-group"><label>上限分值</label><input type="number" v-model="newRule.max_score"></div>
+          </div>
+          <button class="btn btn-primary" @click="saveRule">保存</button>
+          <button class="btn btn-default" @click="showAddRule=false">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 通知管理 -->
+    <div v-else-if="page==='notifications'">
+      <div class="card">
+        <div class="toolbar">
+          <h2 style="border:none;margin:0;padding:0">通知列表</h2>
+          <button class="btn btn-success" @click="showNotifModal=true;editingNotif=null;notifForm={title:'',content:'',cover_image:''}">+ 新增通知</button>
+        </div>
+        <table><tr><th>ID</th><th>标题</th><th>时间</th><th>操作</th></tr>
+        <tr v-for="n in notificationList" :key="n.id">
+          <td>{{n.id}}</td><td>{{n.title}}</td><td>{{fmtTime(n.created_at)}}</td>
+          <td>
+            <button class="btn btn-default btn-sm" @click="editNotif(n)">编辑</button>
+            <button class="btn btn-danger btn-sm" @click="deleteNotif(n.id)">删除</button>
+          </td>
+        </tr></table>
+      </div>
+      <!-- 通知弹窗 -->
+      <div v-if="showNotifModal" class="modal-overlay" @click.self="showNotifModal=false">
+        <div class="modal">
+          <h2>{{editingNotif?'编辑':'新增'}}通知</h2>
+          <div class="form-group"><label>标题 *</label><input v-model="notifForm.title"></div>
+          <div class="form-group"><label>正文 *</label><textarea v-model="notifForm.content" style="min-height:150px"></textarea></div>
+          <div class="form-group"><label>封面图URL</label><input v-model="notifForm.cover_image"></div>
+          <button class="btn btn-primary" @click="saveNotif">保存</button>
+          <button class="btn btn-default" @click="showNotifModal=false">取消</button>
+        </div>
       </div>
     </div>
 
@@ -192,14 +345,6 @@ tr:hover{background:#f5f9ff}
         <button class="btn btn-primary" @click="saveConfig('wechat')">保存通知配置</button>
       </div>
     </div>
-
-    <!-- 操作日志 -->
-    <div v-else-if="page==='logs'">
-      <div class="card"><h2>操作日志</h2>
-        <table><tr><th>时间</th><th>操作人</th><th>操作类型</th><th>对象</th><th>IP</th></tr>
-        <tr v-for="l in operationLogs" :key="l.id"><td>{{l.created_at}}</td><td>{{l.user_id}}</td><td>{{l.action}}</td><td>{{l.target_type}}#{{l.target_id}}</td><td>{{l.ip_address}}</td></tr></table>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -213,18 +358,23 @@ createApp({
       page: 'dashboard',
       loginPhone: '',
       stats: {},
-      adminUsers: [],
-      roles: [
-        {name:'super_admin',label:'超级管理员',menus:['全部'],dataScope:'全体'},
-        {name:'org_leader',label:'总支委员',menus:['会员管理','活动管理','档案审核','积分规则','社情民意','阵地审批'],dataScope:'全体'},
-        {name:'branch_leader',label:'支部主委',menus:['活动管理','思想汇报查阅'],dataScope:'本支部'}
-      ],
-      audits: [], memberList: [], scoreRules: [], socialList: [],
-      pendingBookings: [], operationLogs: [],
-      adoptLevel: {}, showAddRule: false,
-      newRule: { dimension:'meeting', activity_type:'', score:5, max_score:20 },
+      // 用户管理
+      adminUsers: [], showUserModal: false, editingUser: null, userForm: {phone:'',role:'org_leader'},
+      // 会员管理
+      memberList: [], memberKeyword: '', showMemberModal: false, editingMember: null, memberForm: {}, branches: [],
+      // 活动管理
+      eventList: [], showEventModal: false, editingEvent: null, eventForm: {},
+      // 社情民意
+      socialList: [], showSocialModal: false, editingSocial: null, socialForm: {}, adoptLevel: {},
+      // 阵地
+      pendingBookings: [],
+      // 积分规则
+      scoreRules: [], showAddRule: false, editingRule: null, newRule: {dimension:'meeting',activity_type:'',score:5,max_score:20},
       dims: [{value:'political',label:'政治思想'},{value:'meeting',label:'会务活动'},{value:'participation',label:'参政议政'},{value:'social',label:'社会服务'},{value:'publicity',label:'宣传报道'},{value:'performance',label:'工作业绩'}],
-      config: { email_host:'', email_port:465, email_user:'', email_target:'', notify_template_id:'', audit_template_id:'' }
+      // 通知
+      notificationList: [], showNotifModal: false, editingNotif: null, notifForm: {},
+      // 配置
+      config: {email_host:'',email_port:465,email_user:'',email_target:'',notify_template_id:'',audit_template_id:''}
     }
   },
   async mounted(){
@@ -233,36 +383,116 @@ createApp({
   methods: {
     async api(url, method='GET', data=null){
       try {
-        const res = await axios({ url: url, method, data, headers:{ Authorization:'Bearer '+this.token } })
+        const res = await axios({ url, method, data, headers:{ Authorization:'Bearer '+this.token } })
         return res.data
       } catch(e){ if(e.response?.status===401){this.token=null;localStorage.removeItem('admin_token')}; throw e }
     },
     async doLogin(){
-      try { const res = await this.api('/auth/admin-login','POST',{phone:this.loginPhone}); this.token=res.access_token; localStorage.setItem('admin_token',res.access_token); await this.loadAll() } catch(e){ alert('登录失败') }
+      try { const res=await this.api('/auth/admin-login','POST',{phone:this.loginPhone}); this.token=res.access_token; localStorage.setItem('admin_token',res.access_token); await this.loadAll() } catch(e){ alert('登录失败') }
     },
     async loadAll(){
       try{
-        const [stats,mems,events,scores,social,venues,logs]=await Promise.all([
-          this.api('/members/'),this.api('/members/'),this.api('/events/'),
-          this.api('/scoring/rules'),this.api('/social-info/admin'),
-          this.api('/venues/bookings/pending'),this.api('/profile/messages')
+        // 获取当前用户信息
+        const me = await this.api('/auth/me')
+        this.user = me
+        // 根据角色计算权限
+        const role = me.role
+        this.isSuperAdmin = role === 'super_admin'
+        this.isOrgLeader = role === 'super_admin' || role === 'org_leader'
+        this.isLeader = this.isOrgLeader || role === 'branch_leader'
+        this.canManageMembers = this.isOrgLeader
+        this.canManageEvents = this.isLeader
+        this.canManageSocial = this.isOrgLeader
+        this.canManageVenues = this.isOrgLeader
+        this.canManageScoring = this.isOrgLeader
+        this.canManageNotif = this.isOrgLeader
+
+        const [mems,events,social,venues,branches]=await Promise.all([
+          this.api('/members/'),this.api('/events/'),this.api('/social-info/admin'),
+          this.api('/venues/bookings/pending'),this.api('/branches/')
         ])
-        this.stats = { total_members:mems?.length||0, active_events:events?.filter(e=>e.status==='published')?.length||0, total_infos:social?.length||0, pending_audits:this.audits?.length||0 }
-        this.memberList = mems || []
-        this.socialList = social || []
-        this.scoreRules = scores || []
-        this.pendingBookings = venues || []
-        this.operationLogs = logs?.items || []
+        this.memberList=mems||[]; this.eventList=events||[]; this.socialList=social||[]
+        this.pendingBookings=venues||[]; this.branches=branches||[]
+        this.stats={total_members:mems?.length||0,active_events:events?.filter(e=>e.status==='published')?.length||0,total_infos:social?.length||0,pending_bookings:venues?.length||0}
       } catch(e){ console.error(e) }
     },
-    statusLabel(s){ const m={pending:'待审核',city_adopted:'市级录用',province_adopted:'省级录用',national_adopted:'全国录用',rejected:'未录用'}; return m[s]||s },
-    async adoptInfo(id){ try{ await this.api('/social-info/'+id+'/adopt','POST',{level:this.adoptLevel[id]}); alert('已标记'); await this.loadAll() } catch(e){ alert('操作失败') } },
-    async approveBooking(id){ try{ await this.api('/venues/bookings/'+id+'/approve','POST'); await this.loadAll() } catch(e){ alert('操作失败') } },
-    async rejectBooking(id){ const r=prompt('驳回理由'); if(r){ try{ await this.api('/venues/bookings/'+id+'/reject?reason='+r,'POST'); await this.loadAll() } catch(e){ alert('操作失败') }}},
-    async saveRule(){ try{ await this.api('/scoring/rules?dimension='+this.newRule.dimension+'&activity_type='+this.newRule.activity_type+'&score='+this.newRule.score+'&max_score='+(this.newRule.max_score||''),'POST'); this.showAddRule=false; await this.loadAll() } catch(e){ alert('保存失败') } },
-    editRule(r){ this.newRule={...r}; this.showAddRule=true },
-    saveConfig(t){ alert('配置保存成功') },
-    toggleUser(u){ alert('用户状态切换（需后端支持）') }
+    // ===== 用户管理 =====
+    async loadUsers(){ try{ this.adminUsers=await this.api('/users/')||[] } catch(e){} },
+    async saveUser(){
+      try{
+        if(this.editingUser){ await this.api('/users/'+this.editingUser.id,'PUT',{role:this.userForm.role}) }
+        else { await this.api('/users/','POST',this.userForm) }
+        this.showUserModal=false; await this.loadUsers()
+      } catch(e){ alert('保存失败: '+(e.response?.data?.detail||e.message)) }
+    },
+    editUser(u){ this.editingUser=u; this.userForm={phone:u.phone,role:u.role}; this.showUserModal=true },
+    async toggleUser(u){ try{ await this.api('/users/'+u.id,'PUT',{is_active:!u.is_active}); await this.loadUsers() } catch(e){ alert('操作失败') } },
+    async deleteUser(id){ if(!confirm('确认删除?'))return; try{ await this.api('/users/'+id,'DELETE'); await this.loadUsers() } catch(e){ alert('删除失败') } },
+    // ===== 会员管理 =====
+    async loadMembers(){ try{ const url=this.memberKeyword?'/members/?keyword='+encodeURIComponent(this.memberKeyword):'/members/'; this.memberList=await this.api(url)||[] } catch(e){} },
+    async saveMember(){
+      try{
+        const data={...this.memberForm}
+        if(data.branch_id) data.branch_id=parseInt(data.branch_id)
+        if(this.editingMember){ await this.api('/members/'+this.editingMember.id,'PUT',data) }
+        else { await this.api('/members/','POST',data) }
+        this.showMemberModal=false; await this.loadMembers()
+      } catch(e){ alert('保存失败: '+(e.response?.data?.detail||e.message)) }
+    },
+    editMember(m){ this.editingMember=m; this.memberForm={name:m.name,phone:m.phone||'',id_card:m.id_card||'',branch_id:m.branch_id,org_position:m.org_position||'',join_date:m.join_date||'',work_unit:m.work_unit||'',work_position:m.work_position||'',title:m.title||'',education:m.education||'',school:m.school||'',specialty:m.specialty|| '',social_position:m.social_position|| '',native_place:m.native_place|| ''}; this.showMemberModal=true },
+    async deleteMember(id){ if(!confirm('确认删除?'))return; try{ await this.api('/members/'+id,'DELETE'); await this.loadMembers() } catch(e){ alert('删除失败') } },
+    // ===== 活动管理 =====
+    async loadEvents(){ try{ this.eventList=await this.api('/events/')||[] } catch(e){} },
+    async saveEvent(){
+      try{
+        if(this.editingEvent){ await this.api('/events/'+this.editingEvent.id,'PUT',this.eventForm) }
+        else { await this.api('/events/','POST',this.eventForm) }
+        this.showEventModal=false; await this.loadEvents()
+      } catch(e){ alert('保存失败: '+(e.response?.data?.detail||e.message)) }
+    },
+    editEvent(e){ this.editingEvent=e; this.eventForm={title:e.title,event_time:e.event_time?.replace(' ','T')||'',location:e.location|| '',max_participants:e.max_participants||0,description:e.description|| '',cover_image:e.cover_image|| ''}; this.showEventModal=true },
+    async deleteEvent(id){ if(!confirm('确认删除?'))return; try{ await this.api('/events/'+id,'DELETE'); await this.loadEvents() } catch(e){ alert('删除失败') } },
+    // ===== 社情民意 =====
+    async loadSocial(){ try{ this.socialList=await this.api('/social-info/admin')||[] } catch(e){} },
+    async saveSocial(){
+      try{ await this.api('/social-info/','POST',this.socialForm); this.showSocialModal=false; await this.loadSocial() } catch(e){ alert('保存失败: '+(e.response?.data?.detail||e.message)) }
+    },
+    async adoptInfo(id){ try{ await this.api('/social-info/'+id+'/adopt','POST',{level:this.adoptLevel[id]}); alert('已标记'); await this.loadSocial() } catch(e){ alert('操作失败') } },
+    async deleteSocial(id){ if(!confirm('确认删除?'))return; try{ await this.api('/social-info/'+id,'DELETE'); await this.loadSocial() } catch(e){ alert('删除失败') } },
+    // ===== 阵地 =====
+    async loadVenues(){ try{ this.pendingBookings=await this.api('/venues/bookings/pending')||[] } catch(e){} },
+    async approveBooking(id){ try{ await this.api('/venues/bookings/'+id+'/approve','POST'); await this.loadVenues() } catch(e){ alert('操作失败') } },
+    async rejectBooking(id){ const r=prompt('驳回理由'); if(r){ try{ await this.api('/venues/bookings/'+id+'/reject?reason='+encodeURIComponent(r),'POST'); await this.loadVenues() } catch(e){ alert('操作失败') }}},
+    // ===== 积分规则 =====
+    async loadRules(){ try{ this.scoreRules=await this.api('/scoring/rules')||[] } catch(e){} },
+    async saveRule(){
+      try{
+        const params='dimension='+this.newRule.dimension+'&activity_type='+encodeURIComponent(this.newRule.activity_type)+'&score='+this.newRule.score+'&max_score='+(this.newRule.max_score||'')
+        if(this.editingRule){ await this.api('/scoring/rules/'+this.editingRule.id+'?'+params,'PUT') }
+        else { await this.api('/scoring/rules?'+params,'POST') }
+        this.showAddRule=false; await this.loadRules()
+      } catch(e){ alert('保存失败') }
+    },
+    editRule(r){ this.editingRule=r; this.newRule={dimension:r.dimension,activity_type:r.activity_type,score:r.score,max_score:r.max_score||20}; this.showAddRule=true },
+    async deleteRule(id){ if(!confirm('确认删除?'))return; try{ await this.api('/scoring/rules/'+id,'DELETE'); await this.loadRules() } catch(e){ alert('删除失败') } },
+    // ===== 通知 =====
+    async loadNotifications(){ try{ this.notificationList=await this.api('/notifications/')||[] } catch(e){} },
+    async saveNotif(){
+      try{
+        if(this.editingNotif){ await this.api('/notifications/'+this.editingNotif.id,'PUT',this.notifForm) }
+        else { await this.api('/notifications/','POST',this.notifForm) }
+        this.showNotifModal=false; await this.loadNotifications()
+      } catch(e){ alert('保存失败: '+(e.response?.data?.detail||e.message)) }
+    },
+    editNotif(n){ this.editingNotif=n; this.notifForm={title:n.title,content:n.content||'',cover_image:n.cover_image||''}; this.showNotifModal=true },
+    async deleteNotif(id){ if(!confirm('确认删除?'))return; try{ await this.api('/notifications/'+id,'DELETE'); await this.loadNotifications() } catch(e){ alert('删除失败') } },
+    // ===== 工具 =====
+    roleLabel(r){ const m={super_admin:'超级管理员',org_leader:'总支委员',branch_leader:'支部 менен',member:'会员',public:'公众'}; return m[r]||r },
+    statusLabel(s){ const m={active:'在会',inactive:'离会',pending:'待审核'}; return m[s]||s },
+    socialStatusLabel(s){ const m={pending:'待审核',city_adopted:'市级录用',province_adopted:'省级录用',national_adopted:'全国录用',rejected:'未录用'}; return m[s]||s },
+    dimLabel(d){ const m={political:'政治思想',meeting:'会务活动',participation:'参政议政',social:'社会服务',publicity:'宣传报道',performance:'工作业绩'}; return m[d]||d },
+    fmtTime(t){ if(!t)return'-'; return new Date(t).toLocaleString('zh-CN') },
+    saveConfig(t){ alert('配置保存成功（需后端支持）') }
   }
 }).mount('#app')
 </script>

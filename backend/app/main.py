@@ -8,7 +8,7 @@ from slowapi.errors import RateLimitExceeded
 from app.config import get_settings
 from app.database import engine
 from app import models
-from app.routers import auth, members, branches, notifications, events, scoring, social_info, venues, learning, public, profile
+from app.routers import auth, members, branches, notifications, events, scoring, social_info, venues, learning, public, profile, users
 
 settings = get_settings()
 
@@ -54,6 +54,7 @@ app.include_router(venues.router)
 app.include_router(learning.router)
 app.include_router(public.router)
 app.include_router(profile.router)
+app.include_router(users.router)
 
 
 @app.get("/")

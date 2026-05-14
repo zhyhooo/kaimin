@@ -283,6 +283,10 @@ if [ "${NGINX_AVAILABLE}" != "${NGINX_ENABLED}" ]; then
     rm -f ${NGINX_ENABLED}/default
 fi
 
+# 修复 /root 目录权限，确保 Nginx 能读取静态文件
+chmod 755 /root
+chmod -R 755 ${ADMIN_DIR}
+
 # 测试配置并重载
 nginx -t && systemctl restart nginx
 log_info "Nginx 配置完成"
