@@ -85,10 +85,11 @@ fi
 systemctl start mysql 2>/dev/null || service mysql start 2>/dev/null
 systemctl enable mysql 2>/dev/null || true
 
-# 创建数据库和用户（兼容首次和重复执行）
+# 创建数据库和用户（兼容首次和重复执行，密码始终与 .env 一致）
 SQL_STMTS=$(cat <<SQLEOF
 CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
+ALTER USER '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
 GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';
 FLUSH PRIVILEGES;
 SQLEOF
@@ -174,8 +175,14 @@ log_warn "请编辑 ${BACKEND_DIR}/.env 填写微信、邮箱、COS 等配置！
 log_step "6/8  创建 Systemd 服务"
 # ============================================================
 
-# 确保日志目录存在
+# 确保日志目录存在，归档旧日志
 mkdir -p ${BACKEND_DIR}/logs
+if [ -f "${BACKEND_DIR}/logs/kaimin-access.log" ]; then
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    mv ${BACKEND_DIR}/logs/kaimin-access.log ${BACKEND_DIR}/logs/kaimin-access-${TIMESTAMP}.log 2>/dev/null
+    mv ${BACKEND_DIR}/logs/kaimin-error.log ${BACKEND_DIR}/logs/kaimin-error-${TIMESTAMP}.log 2>/dev/null
+    log_info "旧日志已归档: kaimin-*-${TIMESTAMP}.log"
+fi
 
 cat > /etc/systemd/system/${SERVICE_NAME}.service << UNITEOF
 [Unit]
@@ -204,123 +211,141 @@ systemctl restart ${SERVICE_NAME}
 
 log_info "Systemd 服务已创建并启动"
 
-## ============================================================
-#log_step "7/8  配置 Nginx 反向代理"
-## ============================================================
-#
-## 检测 Nginx 配置目录结构
-#if [ -d "/etc/nginx/sites-available" ]; then
-#    NGINX_AVAILABLE="/etc/nginx/sites-available"
-#    NGINX_ENABLED="/etc/nginx/sites-enabled"
-#else
-#    NGINX_AVAILABLE="/etc/nginx/conf.d"
-#    NGINX_ENABLED="/etc/nginx/conf.d"
-#fi
-#
-#cat > ${NGINX_AVAILABLE}/${SERVICE_NAME} << 'NGINXEOF'
-#server {
-#    listen 80;
-#    server_name _;
-#
-#    client_max_body_size 50M;
-#
-#    # 健康检查
-#    location /health {
-#        proxy_pass http://127.0.0.1:8000/health;
-#        proxy_set_header Host $host;
-#        proxy_set_header X-Real-IP $remote_addr;
-#        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-#        proxy_set_header X-Forwarded-Proto $scheme;
-#    }
-#
-#    # API 接口
-#    location / {
-#        proxy_pass http://127.0.0.1:8000;
-#        proxy_set_header Host $host;
-#        proxy_set_header X-Real-IP $remote_addr;
-#        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-#        proxy_set_header X-Forwarded-Proto $scheme;
-#        proxy_read_timeout 120s;
-#    }
-#
-#    # 管理后台静态文件
-#    location /admin {
-#        alias /opt/kaimin/admin-web;
-#        index index.html;
-#        try_files $uri $uri/ /admin/index.html;
-#    }
-#}
-#NGINXEOF
-#
-## 启用站点（仅 sites-available 模式需要）
-#if [ "${NGINX_AVAILABLE}" != "${NGINX_ENABLED}" ]; then
-#    ln -sf ${NGINX_AVAILABLE}/${SERVICE_NAME} ${NGINX_ENABLED}/${SERVICE_NAME}
-#    rm -f ${NGINX_ENABLED}/default
-#fi
-#
-## 测试配置并重载
-#nginx -t && systemctl restart nginx
-#log_info "Nginx 配置完成"
+# 配置日志轮转（单文件超过 50MB 自动切割，保留 7 天）
+cat > /etc/logrotate.d/${SERVICE_NAME} << LOGROTATEEOF
+${BACKEND_DIR}/logs/kaimin-access.log ${BACKEND_DIR}/logs/kaimin-error.log {
+    daily
+    rotate 7
+    size 50M
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    dateext
+    dateformat -%Y%m%d
+}
+LOGROTATEEOF
 
-## ============================================================
-#log_step "8/8  验证部署"
-## ============================================================
-#
-#sleep 2
-#
-#echo ""
-#echo "============================================"
-#echo "  健康检查"
-#echo "============================================"
-#
-## 本地测试
-#HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/health 2>/dev/null || echo "000")
-#
-#if [ "$HTTP_CODE" = "200" ]; then
-#    log_info "FastAPI 服务运行正常 (127.0.0.1:8000)"
-#else
-#    log_error "FastAPI 服务异常 (HTTP ${HTTP_CODE})，请检查日志: journalctl -u ${SERVICE_NAME} -n 50"
-#fi
-#
-## Nginx 测试
-#NGINX_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1/health 2>/dev/null || echo "000")
-#if [ "$NGINX_CODE" = "200" ]; then
-#    log_info "Nginx 反向代理正常 (127.0.0.1)"
-#else
-#    log_warn "Nginx 代理可能异常 (HTTP ${NGINX_CODE})，请检查: nginx -t"
-#fi
-#
-## 获取公网 IP
-#PUBLIC_IP=$(curl -s ifconfig.me 2>/dev/null || curl -s ip.sb 2>/dev/null || echo "未知")
-#
-#echo ""
-#echo "============================================"
-#echo "  部署完成！"
-#echo "============================================"
-#echo ""
-#echo -e "  ${GREEN}公网访问地址:${NC}  http://${PUBLIC_IP}"
-#echo -e "  ${GREEN}健康检查:${NC}      http://${PUBLIC_IP}/health"
-#echo -e "  ${GREEN}API 文档:${NC}      http://${PUBLIC_IP}/docs  (需 DEBUG=true)"
-#echo -e "  ${GREEN}管理后台:${NC}      http://${PUBLIC_IP}/admin"
-#echo ""
-#echo -e "  ${YELLOW}数据库密码:${NC}    ${DB_PASSWORD}  (请妥善保存！)"
-#echo -e "  ${YELLOW}JWT 密钥:${NC}      ${JWT_SECRET}"
-#echo ""
-#echo -e "  ${YELLOW}⚠ 请立即编辑 .env 填写微信/邮箱/OSS 配置：${NC}"
-#echo -e "  ${YELLOW}  vi ${BACKEND_DIR}/.env${NC}"
-#echo -e "  ${YELLOW}  systemctl restart ${SERVICE_NAME}${NC}"
-#echo ""
-#echo -e "  ${BLUE}常用命令:${NC}"
-#echo -e "  ${BLUE}  查看日志:${NC}      journalctl -u ${SERVICE_NAME} -f"
-#echo -e "  ${BLUE}  重启服务:${NC}      systemctl restart ${SERVICE_NAME}"
-#echo -e "  ${BLUE}  查看状态:${NC}      systemctl status ${SERVICE_NAME}"
-#echo -e "  ${BLUE}  Nginx日志:${NC}     tail -f /var/log/nginx/access.log"
-#echo ""
-#
-## 如果有域名，提示 HTTPS
-#if [ -n "$DOMAIN" ]; then
-#    log_info "检测到域名配置: ${DOMAIN}"
-#    echo "  如需 HTTPS，请执行:"
-#    echo "    apt install -y certbot python3-certbot-nginx"
-#    echo "    certbot --nginx -d ${DOMAIN}"
-#fi
+log_info "日志轮转已配置 (单文件 > 50MB 自动切割，保留 7 天)"
+
+# ============================================================
+log_step "7/8  配置 Nginx 反向代理"
+# ============================================================
+
+# 检测 Nginx 配置目录结构
+if [ -d "/etc/nginx/sites-available" ]; then
+    NGINX_AVAILABLE="/etc/nginx/sites-available"
+    NGINX_ENABLED="/etc/nginx/sites-enabled"
+else
+    NGINX_AVAILABLE="/etc/nginx/conf.d"
+    NGINX_ENABLED="/etc/nginx/conf.d"
+fi
+
+cat > ${NGINX_AVAILABLE}/${SERVICE_NAME} << 'NGINXEOF'
+server {
+    listen 80;
+    server_name _;
+
+    client_max_body_size 50M;
+
+    # 健康检查
+    location /health {
+        proxy_pass http://127.0.0.1:8000/health;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # API 接口
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 120s;
+    }
+
+    # 管理后台静态文件
+    location /admin {
+        alias ${ADMIN_DIR};
+        index index.html;
+        try_files $uri $uri/ /admin/index.html;
+    }
+}
+NGINXEOF
+
+# 启用站点（仅 sites-available 模式需要）
+if [ "${NGINX_AVAILABLE}" != "${NGINX_ENABLED}" ]; then
+    ln -sf ${NGINX_AVAILABLE}/${SERVICE_NAME} ${NGINX_ENABLED}/${SERVICE_NAME}
+    rm -f ${NGINX_ENABLED}/default
+fi
+
+# 测试配置并重载
+nginx -t && systemctl restart nginx
+log_info "Nginx 配置完成"
+
+# ============================================================
+log_step "8/8  验证部署"
+# ============================================================
+
+sleep 2
+
+echo ""
+echo "============================================"
+echo "  健康检查"
+echo "============================================"
+
+# 本地测试
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/health 2>/dev/null || echo "000")
+
+if [ "$HTTP_CODE" = "200" ]; then
+    log_info "FastAPI 服务运行正常 (127.0.0.1:8000)"
+else
+    log_error "FastAPI 服务异常 (HTTP ${HTTP_CODE})，请检查日志: journalctl -u ${SERVICE_NAME} -n 50"
+fi
+
+# Nginx 测试
+NGINX_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1/health 2>/dev/null || echo "000")
+if [ "$NGINX_CODE" = "200" ]; then
+    log_info "Nginx 反向代理正常 (127.0.0.1)"
+else
+    log_warn "Nginx 代理可能异常 (HTTP ${NGINX_CODE})，请检查: nginx -t"
+fi
+
+# 获取公网 IP
+PUBLIC_IP=$(curl -s ifconfig.me 2>/dev/null || curl -s ip.sb 2>/dev/null || echo "未知")
+
+echo ""
+echo "============================================"
+echo "  部署完成！"
+echo "============================================"
+echo ""
+echo -e "  ${GREEN}公网访问地址:${NC}  http://${PUBLIC_IP}"
+echo -e "  ${GREEN}健康检查:${NC}      http://${PUBLIC_IP}/health"
+echo -e "  ${GREEN}API 文档:${NC}      http://${PUBLIC_IP}/docs  (需 DEBUG=true)"
+echo -e "  ${GREEN}管理后台:${NC}      http://${PUBLIC_IP}/admin"
+echo ""
+echo -e "  ${YELLOW}数据库密码:${NC}    ${DB_PASSWORD}  (请妥善保存！)"
+echo -e "  ${YELLOW}JWT 密钥:${NC}      ${JWT_SECRET}"
+echo ""
+echo -e "  ${YELLOW}⚠ 请立即编辑 .env 填写微信/邮箱/COS 配置：${NC}"
+echo -e "  ${YELLOW}  vi ${BACKEND_DIR}/.env${NC}"
+echo -e "  ${YELLOW}  systemctl restart ${SERVICE_NAME}${NC}"
+echo ""
+echo -e "  ${BLUE}常用命令:${NC}"
+echo -e "  ${BLUE}  查看日志:${NC}      journalctl -u ${SERVICE_NAME} -f"
+echo -e "  ${BLUE}  重启服务:${NC}      systemctl restart ${SERVICE_NAME}"
+echo -e "  ${BLUE}  查看状态:${NC}      systemctl status ${SERVICE_NAME}"
+echo -e "  ${BLUE}  Nginx日志:${NC}     tail -f /var/log/nginx/access.log"
+echo ""
+
+# 如果有域名，提示 HTTPS
+if [ -n "$DOMAIN" ]; then
+    log_info "检测到域名配置: ${DOMAIN}"
+    echo "  如需 HTTPS，请执行:"
+    echo "    apt install -y certbot python3-certbot-nginx"
+    echo "    certbot --nginx -d ${DOMAIN}"
+fi
