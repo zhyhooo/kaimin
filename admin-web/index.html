@@ -241,6 +241,11 @@ createApp({
     // ===== 用户管理 =====
     async loadUsers(){ try{ this.adminUsers=await this.api('/users/')||[] }catch(e){} },
     async saveUser(){
+      if(!this.editingUser){
+        if(!this.userForm.phone || !/^1[3-9]\d{9}$/.test(this.userForm.phone)){
+          alert('请输入正确的11位手机号'); return
+        }
+      }
       try{
         if(this.editingUser){ await this.api('/users/'+this.editingUser.id,'PUT',{role:this.userForm.role}) }
         else { await this.api('/users/','POST',this.userForm) }
@@ -257,6 +262,12 @@ createApp({
     // ===== 会员管理 =====
     async loadMembers(){ try{ const url=this.memberKeyword?'/members/?keyword='+encodeURIComponent(this.memberKeyword):'/members/'; const [mems, brs]=await Promise.all([this.api(url), this.api('/branches/')]); this.memberList=mems||[]; this.branches=brs||[] }catch(e){} },
     async saveMember(){
+      if(!this.memberForm.name || !this.memberForm.name.trim()){
+        alert('请输入姓名'); return
+      }
+      if(!this.memberForm.phone || !/^1[3-9]\d{9}$/.test(this.memberForm.phone)){
+        alert('请输入正确的11位手机号'); return
+      }
       try{
         const data={...this.memberForm}
         if(data.branch_id) data.branch_id=parseInt(data.branch_id)
@@ -299,6 +310,9 @@ createApp({
     // ===== 支部管理 =====
     async loadBranches(){ try{ this.branchList=await this.api('/branches/')||[] }catch(e){} },
     async saveBranch(){
+      if(!this.branchForm.name || !this.branchForm.name.trim()){
+        alert('请输入支部名称'); return
+      }
       try{
         const data={...this.branchForm}
         if(data.parent_id) data.parent_id=parseInt(data.parent_id)
@@ -317,6 +331,12 @@ createApp({
     // ===== 活动管理 =====
     async loadEvents(){ try{ this.eventList=await this.api('/events/')||[] }catch(e){} },
     async saveEvent(){
+      if(!this.eventForm.title || !this.eventForm.title.trim()){
+        alert('请输入活动标题'); return
+      }
+      if(!this.eventForm.event_time){
+        alert('请选择活动时间'); return
+      }
       try{
         if(this.editingEvent){ await this.api('/events/'+this.editingEvent.id,'PUT',this.eventForm) }
         else { await this.api('/events/','POST',this.eventForm) }
@@ -337,6 +357,12 @@ createApp({
     // ===== 社情民意 =====
     async loadSocial(){ try{ this.socialList=await this.api('/social-info/admin')||[] }catch(e){} },
     async saveSocial(){
+      if(!this.socialForm.title || !this.socialForm.title.trim()){
+        alert('请输入标题'); return
+      }
+      if(!this.socialForm.content || !this.socialForm.content.trim()){
+        alert('请输入正文'); return
+      }
       try{ await this.api('/social-info/','POST',this.socialForm); this.showSocialModal=false; await this.loadSocial() }catch(e){
         const detail = e.response?.data?.detail
         if(Array.isArray(detail)){ alert('保存失败: ' + detail.map(d=>d.msg).join('; ')) }
@@ -364,6 +390,12 @@ createApp({
     // ===== 通知 =====
     async loadNotifications(){ try{ this.notificationList=await this.api('/notifications/')||[] }catch(e){} },
     async saveNotif(){
+      if(!this.notifForm.title || !this.notifForm.title.trim()){
+        alert('请输入通知标题'); return
+      }
+      if(!this.notifForm.content || !this.notifForm.content.trim()){
+        alert('请输入通知正文'); return
+      }
       try{
         if(this.editingNotif){ await this.api('/notifications/'+this.editingNotif.id,'PUT',this.notifForm) }
         else { await this.api('/notifications/','POST',this.notifForm) }

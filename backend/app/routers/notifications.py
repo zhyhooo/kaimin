@@ -35,9 +35,10 @@ async def list_notifications(
 ):
     """通知列表 - 根据发布范围过滤"""
     now = datetime.now()
+    from sqlalchemy import or_
     query = db.query(Notification).filter(
         Notification.status == "published",
-        Notification.publish_time <= now
+        or_(Notification.publish_time <= now, Notification.publish_time.is_(None))
     )
 
     # 根据用户角色和支部过滤
@@ -154,10 +155,12 @@ async def create_notification(
         data.scope_branch_ids = [member.branch_id] if member else []
 
     now = datetime.now()
+    if not data.publish_time:
+        data.publish_time = now
     notification = Notification(
         **data.dict(),
         author_id=current_user.id,
-        status="published" if not data.publish_time or data.publish_time <= now else "draft"
+        status="published" if data.publish_time <= now else "draft"
     )
     db.add(notification)
     db.commit()

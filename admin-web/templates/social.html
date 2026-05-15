@@ -1,7 +1,7 @@
 <div class="card">
   <div class="toolbar">
     <h2 style="border:none;margin:0;padding:0">社情民意列表</h2>
-    <button class="btn btn-success" @click="$root.showSocialModal=true;$root.editingSocial=null;$root.socialForm={title:'',content:'',is_joint:false}">+ 新增社情民意</button>
+    <button class="btn btn-success" @click="$root.showSocialModal=true;$root.editingSocial=null;$root.socialForm={title:'',content:'',is_joint:false,attachment:''}">+ 新增社情民意</button>
   </div>
   <table><tr><th>标题</th><th>作者</th><th>支部</th><th>状态</th><th>时间</th><th>操作</th></tr>
   <tr v-for="i in $root.socialList" :key="i.id">
@@ -20,6 +20,7 @@
     <h2>{{ $root.editingSocial?'编辑':'新增' }}社情民意</h2>
     <div class="form-group"><label>标题 *</label><input v-model="$root.socialForm.title"></div>
     <div class="form-group"><label>正文 *</label><textarea v-model="$root.socialForm.content" style="min-height:150px"></textarea></div>
+    <div class="form-group"><label>附件URL</label><input v-model="$root.socialForm.attachment" placeholder="选填，如文件链接"></div>
     <div class="form-group"><label><input type="checkbox" v-model="$root.socialForm.is_joint"> 联合提交</label></div>
     <button class="btn btn-primary" @click="$root.saveSocial">保存</button>
     <button class="btn btn-default" @click="$root.showSocialModal=false">取消</button>
