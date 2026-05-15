@@ -242,40 +242,40 @@ else
     NGINX_ENABLED="/etc/nginx/conf.d"
 fi
 
-cat > ${NGINX_AVAILABLE}/${SERVICE_NAME} << NGINXEOF
-server {
-    listen 80;
-    server_name _;
+	cat > ${NGINX_AVAILABLE}/${SERVICE_NAME} << NGINXEOF
+	server {
+	    listen 80;
+	    server_name _;
 
-    client_max_body_size 50M;
+	    client_max_body_size 50M;
 
-    # 健康检查
-    location /health {
-        proxy_pass http://127.0.0.1:8000/health;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
+	    # 健康检查
+	    location /health {
+	        proxy_pass http://127.0.0.1:8000/health;
+	        proxy_set_header Host \$host;
+	        proxy_set_header X-Real-IP \$remote_addr;
+	        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+	        proxy_set_header X-Forwarded-Proto \$scheme;
+	    }
 
-    # API 接口
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 120s;
-    }
+	    # API 接口
+	    location / {
+	        proxy_pass http://127.0.0.1:8000;
+	        proxy_set_header Host \$host;
+	        proxy_set_header X-Real-IP \$remote_addr;
+	        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+	        proxy_set_header X-Forwarded-Proto \$scheme;
+	        proxy_read_timeout 120s;
+	    }
 
-    # 管理后台静态文件
-    location /admin {
-        alias ${ADMIN_DIR}/;
-        index index.html;
-        try_files $uri $uri/ /admin/index.html;
-    }
-}
-NGINXEOF
+	    # 管理后台静态文件
+	    location /admin {
+	        alias ${ADMIN_DIR}/;
+	        index index.html;
+	        try_files \$uri \$uri/ /admin/index.html;
+	    }
+	}
+	NGINXEOF
 
 # 启用站点（仅 sites-available 模式需要）
 if [ "${NGINX_AVAILABLE}" != "${NGINX_ENABLED}" ]; then
