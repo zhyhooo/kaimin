@@ -178,7 +178,7 @@ createApp({
       // 加载模板（按需+缓存）
       if(!this.loadedTemplates[page]){
         try {
-          const html = await this.api('/admin/templates/'+page)
+          const html = await this.api('/api/templates/'+page)
           this.loadedTemplates[page] = html
         } catch(e){
           this.loadedTemplates[page] = '<div class="empty">加载失败或无权限</div>'

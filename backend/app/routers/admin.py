@@ -4,7 +4,7 @@ from pathlib import Path
 from app.auth import get_current_user
 from app.models import User, UserRole, Member
 
-router = APIRouter(prefix="/admin/templates", tags=["管理后台模板"])
+router = APIRouter(prefix="/api/templates", tags=["管理后台模板"])
 
 # 模板目录
 TEMPLATE_DIR = Path(__file__).parent.parent.parent.parent / "admin-web" / "templates"
