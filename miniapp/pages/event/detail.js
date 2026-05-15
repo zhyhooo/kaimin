@@ -28,7 +28,39 @@ Page({
   },
   async signup() {
     const d = this.data.detail
-    try { await app.request({ url: `/events/${d.id}/signup`, method: 'POST' }); wx.showToast({ title: '报名成功' }); this.load(d.id) } catch (e) {}
+    // 弹窗选择是否携带家属
+    wx.showActionSheet({
+      itemList: ['仅本人报名', '携带家属'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          this.doSignup(d.id, false, 0, '')
+        } else {
+          // 携带家属：输入人数
+          wx.showModal({
+            title: '携带家属',
+            content: '请输入携带家属人数',
+            editable: true,
+            placeholderText: '0',
+            success: (modalRes) => {
+              if (modalRes.confirm) {
+                const count = parseInt(modalRes.content) || 1
+                this.doSignup(d.id, true, count, '')
+              }
+            }
+          })
+        }
+      }
+    })
+  },
+  async doSignup(eventId, withFamily, familyCount, remark) {
+    try {
+      await app.request({
+        url: `/events/${eventId}/signup?with_family=${withFamily}&family_count=${familyCount}${remark ? '&remark=' + encodeURIComponent(remark) : ''}`,
+        method: 'POST'
+      })
+      wx.showToast({ title: '报名成功' })
+      this.load(eventId)
+    } catch (e) {}
   },
   async cancel() {
     const d = this.data.detail

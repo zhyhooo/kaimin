@@ -10,3 +10,5 @@
 .tag.open { background: #e8f5e9; color: #2e7d32; }
 .tag.closed { background: #fff3e0; color: #e65100; }
 .empty { text-align: center; color: #999; font-size: 28rpx; padding: 120rpx 0; }
+.calendar-entry { background: #fff; margin: 20rpx; border-radius: 12rpx; padding: 28rpx; text-align: center; font-size: 28rpx; color: #C41E2E; display: flex; align-items: center; justify-content: center; gap: 10rpx; }
+.cal-icon { font-size: 32rpx; }

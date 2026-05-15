@@ -12,4 +12,8 @@
     </view>
   </view>
   <view class="empty" wx:if="{{events.length === 0}}">暂无活动</view>
+  <view class="calendar-entry" bindtap="goCalendar">
+    <text class="cal-icon">📅</text>
+    <text>活动日历</text>
+  </view>
 </view>

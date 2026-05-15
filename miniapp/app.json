@@ -5,6 +5,7 @@
     "pages/notice/detail",
     "pages/event/event",
     "pages/event/detail",
+    "pages/event/calendar",
     "pages/member/member",
     "pages/member/detail",
     "pages/profile/profile",

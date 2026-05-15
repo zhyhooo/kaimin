@@ -48,9 +48,9 @@
       <text class="icon">📢</text>
       <text>通知公告</text>
     </view>
-    <navigator class="grid-item" url="/pages/event/event">
+    <navigator class="grid-item" url="/pages/event/calendar">
       <text class="icon">📅</text>
-      <text>活动报名</text>
+      <text>活动日历</text>
     </navigator>
     <navigator class="grid-item" url="/pages/member/member">
       <text class="icon">👥</text>

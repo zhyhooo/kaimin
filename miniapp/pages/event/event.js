@@ -26,5 +26,6 @@ Page({
       this.setData({ events })
     } catch (e) {}
   },
-  goDetail(e) { wx.navigateTo({ url: `/pages/event/detail?id=${e.currentTarget.dataset.id}` }) }
+  goDetail(e) { wx.navigateTo({ url: `/pages/event/detail?id=${e.currentTarget.dataset.id}` }) },
+  goCalendar() { wx.navigateTo({ url: '/pages/event/calendar' }) }
 })
