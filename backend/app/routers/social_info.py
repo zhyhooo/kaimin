@@ -171,17 +171,18 @@ async def adopt_info(
         raise HTTPException(status_code=400, detail="无效录用级别")
 
     info.status = level_map[data.level]
+    level_display_short = {"city": "市级录用", "province": "省级录用", "national": "全国录用"}
     # 额外记分
     bonus = {"city": 5, "province": 10, "national": 20}
     auto_score = ScoreRecord(
         member_id=info.author_id, dimension=ScoreDimension.PARTICIPATION,
         self_score=bonus.get(data.level, 5), verified_score=bonus.get(data.level, 5),
-        reason=f"社情民意被{level_display.get(data.level, data.level)}录用: {info.title}",
+        reason=f"社情民意被{level_display_short.get(data.level, data.level)}录用: {info.title}",
         verified_at=datetime.now()
     )
     db.add(auto_score)
     db.commit()
-    return {"message": f"已标记为{level_display[data.level]}"}
+    return {"message": f"已标记为{level_display_short[data.level]}"}
 
 
 @router.delete("/{info_id}")

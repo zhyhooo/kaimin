@@ -184,16 +184,8 @@ createApp({
           this.loadedTemplates[page] = '<div class="empty">加载失败或无权限</div>'
         }
       }
-      // 加载数据
-      if(page==='dashboard') await this.loadDashboard()
-      else if(page==='users') await this.loadUsers()
-      else if(page==='members') await this.loadMembers()
-      else if(page==='branches') await this.loadBranches()
-      else if(page==='events') await this.loadEvents()
-      else if(page==='social') await this.loadSocial()
-      else if(page==='venues') await this.loadVenues()
-      else if(page==='scoring') await this.loadRules()
-      else if(page==='notifications') await this.loadNotifications()
+      const loaders={dashboard:()=>this.loadDashboard(),users:()=>this.loadUsers(),members:()=>this.loadMembers(),branches:()=>this.loadBranches(),events:()=>this.loadEvents(),social:()=>this.loadSocial(),venues:()=>this.loadVenues(),scoring:()=>this.loadRules(),notifications:()=>this.loadNotifications()}
+      if(loaders[page]) await loaders[page]()
     },
     async loadDashboard(){
       try{
@@ -238,6 +230,10 @@ createApp({
       this.token=null; this.user=null; this.loadedTemplates={}
       localStorage.removeItem('admin_token'); this.page='dashboard'
     },
+    handleError(e, prefix){
+      const d = e.response?.data?.detail
+      alert(prefix+': '+(Array.isArray(d) ? d.map(x=>x.msg).join('; ') : (d || e.message)))
+    },
     // ===== 用户管理 =====
     async loadUsers(){ try{ this.adminUsers=await this.api('/users/')||[] }catch(e){} },
     async saveUser(){
@@ -250,11 +246,7 @@ createApp({
         if(this.editingUser){ await this.api('/users/'+this.editingUser.id,'PUT',{role:this.userForm.role}) }
         else { await this.api('/users/','POST',this.userForm) }
         this.showUserModal=false; await this.loadUsers()
-      } catch(e){
-        const detail = e.response?.data?.detail
-        if(Array.isArray(detail)){ alert('保存失败: ' + detail.map(d=>d.msg).join('; ')) }
-        else { alert('保存失败: ' + (detail || e.message)) }
-      }
+      } catch(e){ this.handleError(e, '保存失败') }
     },
     editUser(u){ this.editingUser=u; this.userForm={phone:u.phone,role:u.role}; this.showUserModal=true },
     async toggleUser(u){ try{ await this.api('/users/'+u.id,'PUT',{is_active:!u.is_active}); await this.loadUsers() }catch(e){ alert('操作失败') } },
@@ -274,13 +266,18 @@ createApp({
         if(this.editingMember){ await this.api('/members/'+this.editingMember.id,'PUT',data) }
         else { await this.api('/members/','POST',data) }
         this.showMemberModal=false; await this.loadMembers()
-      } catch(e){
-        const detail = e.response?.data?.detail
-        if(Array.isArray(detail)){ alert('保存失败: ' + detail.map(d=>d.msg).join('; ')) }
-        else { alert('保存失败: ' + (detail || e.message)) }
+      } catch(e){ this.handleError(e, '保存失败') }
+    },
+    editMember(m){
+      this.editingMember=m; this.showMemberModal=true
+      this.memberForm={
+        name:m.name, phone:m.phone||'', id_card:m.id_card||'',
+        branch_id:m.branch_id, org_position:m.org_position||'', join_date:m.join_date||'',
+        work_unit:m.work_unit||'', work_position:m.work_position||'',
+        title:m.title||'', education:m.education||'', school:m.school||'',
+        specialty:m.specialty||'', social_position:m.social_position||'', native_place:m.native_place||''
       }
     },
-    editMember(m){ this.editingMember=m; this.memberForm={name:m.name,phone:m.phone||'',id_card:m.id_card||'',branch_id:m.branch_id,org_position:m.org_position||'',join_date:m.join_date||'',work_unit:m.work_unit||'',work_position:m.work_position||'',title:m.title||'',education:m.education||'',school:m.school||'',specialty:m.specialty|| '',social_position:m.social_position|| '',native_place:m.native_place|| ''}; this.showMemberModal=true },
     async deleteMember(id){ if(!confirm('确认删除?'))return; try{ await this.api('/members/'+id,'DELETE'); await this.loadMembers() }catch(e){ alert('删除失败') } },
     onFileSelected(e){ this.selectedFile = e.target.files[0]; this.importResult = null },
     async doImport(){
@@ -292,11 +289,7 @@ createApp({
         })
         this.importResult = res.data
         if(res.data.success_count > 0) await this.loadMembers()
-      } catch(e){
-        const detail = e.response?.data?.detail
-        if(Array.isArray(detail)){ alert('导入失败: ' + detail.map(d=>d.msg).join('; ')) }
-        else { alert('导入失败: ' + (detail || e.message)) }
-      }
+      } catch(e){ this.handleError(e, '导入失败') }
       this.importing = false
     },
     downloadTemplate(){
@@ -320,13 +313,12 @@ createApp({
         if(this.editingBranch){ await this.api('/branches/'+this.editingBranch.id,'PUT',data) }
         else { await this.api('/branches/','POST',data) }
         this.showBranchModal=false; await this.loadBranches()
-      } catch(e){
-        const detail = e.response?.data?.detail
-        if(Array.isArray(detail)){ alert('保存失败: ' + detail.map(d=>d.msg).join('; ')) }
-        else { alert('保存失败: ' + (detail || e.message)) }
-      }
+      } catch(e){ this.handleError(e, '保存失败') }
     },
-    editBranch(b){ this.editingBranch=b; this.branchForm={name:b.name,parent_id:b.parent_id,leader_name:b.leader_name||'',leader_phone:b.leader_phone|| '',sort_order:b.sort_order||0}; this.showBranchModal=true },
+    editBranch(b){
+      this.editingBranch=b; this.showBranchModal=true
+      this.branchForm={name:b.name,parent_id:b.parent_id,leader_name:b.leader_name||'',leader_phone:b.leader_phone||'',sort_order:b.sort_order||0}
+    },
     async deleteBranch(id){ if(!confirm('确认删除该支部？'))return; try{ await this.api('/branches/'+id,'DELETE'); await this.loadBranches() }catch(e){ alert('删除失败: '+(e.response?.data?.detail||e.message)) } },
     // ===== 活动管理 =====
     async loadEvents(){ try{ this.eventList=await this.api('/events/')||[] }catch(e){} },
@@ -341,13 +333,17 @@ createApp({
         if(this.editingEvent){ await this.api('/events/'+this.editingEvent.id,'PUT',this.eventForm) }
         else { await this.api('/events/','POST',this.eventForm) }
         this.showEventModal=false; await this.loadEvents()
-      } catch(e){
-        const detail = e.response?.data?.detail
-        if(Array.isArray(detail)){ alert('保存失败: ' + detail.map(d=>d.msg).join('; ')) }
-        else { alert('保存失败: ' + (detail || e.message)) }
+      } catch(e){ this.handleError(e, '保存失败') }
+    },
+    editEvent(e){
+      this.editingEvent=e; this.showEventModal=true
+      this.eventForm={
+        title:e.title, content:e.content||'', cover_image:e.cover_image||'',
+        event_time:(e.event_time||'').replace(' ','T'),
+        signup_deadline:(e.signup_deadline||'').replace(' ','T'),
+        location:e.location||'', max_participants:e.max_participants||0
       }
     },
-    editEvent(e){ this.editingEvent=e; this.eventForm={title:e.title,event_time:e.event_time?.replace(' ','T')||'',location:e.location|| '',max_participants:e.max_participants||0,content:e.content|| '',cover_image:e.cover_image|| '',signup_deadline:(e.signup_deadline||'').replace(' ','T')}; this.showEventModal=true },
     async deleteEvent(id){ if(!confirm('确认删除?'))return; try{ await this.api('/events/'+id,'DELETE'); await this.loadEvents() }catch(e){ alert('删除失败') } },
     exportRegistrations(eventId){
       if(!confirm('确认导出该活动的报名名单？')) return
@@ -364,11 +360,8 @@ createApp({
       if(!this.socialForm.content || !this.socialForm.content.trim()){
         alert('请输入正文'); return
       }
-      try{ await this.api('/social-info/','POST',this.socialForm); this.showSocialModal=false; await this.loadSocial() }catch(e){
-        const detail = e.response?.data?.detail
-        if(Array.isArray(detail)){ alert('保存失败: ' + detail.map(d=>d.msg).join('; ')) }
-        else { alert('保存失败: ' + (detail || e.message)) }
-      }
+      try{ await this.api('/social-info/','POST',this.socialForm); this.showSocialModal=false; await this.loadSocial() }
+      catch(e){ this.handleError(e, '保存失败') }
     },
     async adoptInfo(id){ try{ await this.api('/social-info/'+id+'/adopt','POST',{level:this.adoptLevel[id]}); alert('已标记'); await this.loadSocial() }catch(e){ alert('操作失败') } },
     async deleteSocial(id){ if(!confirm('确认删除?'))return; try{ await this.api('/social-info/'+id,'DELETE'); await this.loadSocial() }catch(e){ alert('删除失败') } },
@@ -401,11 +394,7 @@ createApp({
         if(this.editingNotif){ await this.api('/notifications/'+this.editingNotif.id,'PUT',this.notifForm) }
         else { await this.api('/notifications/','POST',this.notifForm) }
         this.showNotifModal=false; await this.loadNotifications()
-      } catch(e){
-        const detail = e.response?.data?.detail
-        if(Array.isArray(detail)){ alert('保存失败: ' + detail.map(d=>d.msg).join('; ')) }
-        else { alert('保存失败: ' + (detail || e.message)) }
-      }
+      } catch(e){ this.handleError(e, '保存失败') }
     },
     editNotif(n){ this.editingNotif=n; this.notifForm={title:n.title,content:n.content||'',cover_image:n.cover_image||''}; this.showNotifModal=true },
     async deleteNotif(id){ if(!confirm('确认删除?'))return; try{ await this.api('/notifications/'+id,'DELETE'); await this.loadNotifications() }catch(e){ alert('删除失败') } },
