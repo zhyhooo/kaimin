@@ -3,7 +3,8 @@
 .header { background: #fff; padding: 30rpx 24rpx; margin-bottom: 20rpx; }
 .title { font-size: 36rpx; font-weight: bold; color: #333; display: block; }
 .meta { margin-top: 20rpx; }
-.time, .location, .organizer { font-size: 26rpx; color: #666; display: block; margin-top: 10rpx; }
+.meta .tag.branch { display: inline-block; font-size: 22rpx; background: #FFF0F0; color: #C41E2E; padding: 4rpx 16rpx; border-radius: 20rpx; margin-bottom: 10rpx; }
+.time, .location, .organizer, .deadline { font-size: 26rpx; color: #666; display: block; margin-top: 10rpx; }
 .body { background: #fff; padding: 24rpx; margin-bottom: 20rpx; }
 .actions { padding: 0 24rpx; }
 .btn-signup { background: #C41E2E; color: #fff; border-radius: 40rpx; font-size: 32rpx; margin-bottom: 16rpx; }

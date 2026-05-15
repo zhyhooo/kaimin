@@ -1,28 +1,26 @@
 <view class="page" wx:if="{{org}}">
-  <image class="banner" src="{{org.banner}}" mode="aspectFill" wx:if="{{org.banner}}"/>
   <view class="header">
-    <text class="name">{{org.name}}</text>
-    <text class="intro" wx:if="{{org.introduction}}">{{org.introduction}}</text>
+    <text class="name">{{org.intro.name}}</text>
+    <text class="short-name">{{org.intro.short_name}}</text>
+    <text class="intro">创立于 {{org.intro.founded}} | 总部 {{org.intro.headquarters}}</text>
   </view>
-  <view class="info-section">
-    <view class="info-row" wx:if="{{org.address}}">
-      <text class="label">地址</text>
-      <text class="value">{{org.address}}</text>
-    </view>
-    <view class="info-row" wx:if="{{org.phone}}">
-      <text class="label">电话</text>
-      <text class="value">{{org.phone}}</text>
-    </view>
-    <view class="info-row" wx:if="{{org.email}}">
-      <text class="label">邮箱</text>
-      <text class="value">{{org.email}}</text>
-    </view>
-    <view class="info-row" wx:if="{{org.website}}">
-      <text class="label">网站</text>
-      <text class="value">{{org.website}}</text>
+  <view class="desc-card">
+    <text class="desc-text">{{org.intro.description}}</text>
+  </view>
+  <!-- 领导班子 -->
+  <view class="section" wx:if="{{org.leadership.length > 0}}">
+    <view class="section-title">领导班子</view>
+    <view class="leader-item" wx:for="{{org.leadership}}" wx:key="title">
+      <text class="leader-title">{{item.title}}</text>
+      <text class="leader-name">{{item.name}}</text>
     </view>
   </view>
-  <view class="content-section" wx:if="{{org.content}}">
-    <rich-text nodes="{{org.content}}"></rich-text>
+  <!-- 支部列表 -->
+  <view class="section" wx:if="{{org.branches.length > 0}}">
+    <view class="section-title">下辖支部</view>
+    <view class="branch-item" wx:for="{{org.branches}}" wx:key="id">
+      <text class="branch-name">{{item.name}}</text>
+      <text class="branch-count">{{item.member_count}}人</text>
+    </view>
   </view>
 </view>

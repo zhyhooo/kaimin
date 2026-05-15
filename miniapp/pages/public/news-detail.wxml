@@ -1,0 +1,10 @@
+<view class="page" wx:if="{{detail}}">
+  <image class="cover" src="{{detail.cover_image}}" mode="aspectFill" wx:if="{{detail.cover_image}}"/>
+  <view class="header">
+    <text class="title">{{detail.title}}</text>
+    <text class="meta">🕐 {{detail.event_time}} · 📍 {{detail.location}}</text>
+  </view>
+  <view class="body">
+    <rich-text nodes="{{detail.content}}"></rich-text>
+  </view>
+</view>

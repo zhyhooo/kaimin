@@ -4,8 +4,9 @@
 .info { padding: 20rpx 24rpx; }
 .title { font-size: 32rpx; font-weight: bold; color: #333; display: block; }
 .time, .location { font-size: 26rpx; color: #666; display: block; margin-top: 10rpx; }
-.status { font-size: 22rpx; padding: 4rpx 16rpx; border-radius: 20rpx; display: inline-block; margin-top: 12rpx; }
-.status.open { background: #e8f5e9; color: #2e7d32; }
-.status.closed { background: #fff3e0; color: #e65100; }
-.status.ended { background: #eeeeee; color: #999; }
+.tags { display: flex; align-items: center; gap: 10rpx; margin-top: 12rpx; }
+.tag { font-size: 22rpx; padding: 4rpx 16rpx; border-radius: 20rpx; display: inline-block; }
+.tag.branch { background: #FFF0F0; color: #C41E2E; }
+.tag.open { background: #e8f5e9; color: #2e7d32; }
+.tag.closed { background: #fff3e0; color: #e65100; }
 .empty { text-align: center; color: #999; font-size: 28rpx; padding: 120rpx 0; }

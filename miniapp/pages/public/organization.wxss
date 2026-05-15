@@ -1,11 +1,18 @@
 .page { background: #f5f5f5; min-height: 100vh; }
 .banner { width: 100%; height: 300rpx; }
-.header { background: #fff; padding: 30rpx 24rpx; margin-bottom: 20rpx; }
-.name { font-size: 36rpx; font-weight: bold; color: #333; display: block; }
-.intro { font-size: 26rpx; color: #666; margin-top: 14rpx; display: block; line-height: 1.6; }
-.info-section { background: #fff; margin-bottom: 20rpx; }
-.info-row { display: flex; padding: 26rpx 24rpx; border-bottom: 1rpx solid #f5f5f5; }
-.info-row:last-child { border: none; }
-.label { font-size: 28rpx; color: #999; width: 100rpx; flex-shrink: 0; }
-.value { font-size: 28rpx; color: #333; flex: 1; }
+.header { background: linear-gradient(135deg, #C41E2E, #e8485a); padding: 50rpx 30rpx; text-align: center; }
+.name { font-size: 40rpx; font-weight: bold; color: #fff; display: block; }
+.short-name { font-size: 24rpx; color: rgba(255,255,255,0.7); display: block; margin-top: 8rpx; }
+.intro { font-size: 22rpx; color: rgba(255,255,255,0.6); display: block; margin-top: 8rpx; }
+.desc-card { background: #fff; margin: 20rpx; border-radius: 12rpx; padding: 24rpx; }
+.desc-text { font-size: 28rpx; color: #555; line-height: 1.8; }
+.section { background: #fff; margin: 0 20rpx 20rpx; border-radius: 12rpx; padding: 24rpx; }
+.section-title { font-size: 30rpx; font-weight: bold; color: #333; margin-bottom: 16rpx; padding-bottom: 12rpx; border-bottom: 2rpx solid #C41E2E; }
+.leader-item { display: flex; align-items: center; padding: 14rpx 0; }
+.leader-title { font-size: 26rpx; color: #999; width: 100rpx; }
+.leader-name { font-size: 28rpx; color: #333; font-weight: bold; }
+.branch-item { display: flex; justify-content: space-between; align-items: center; padding: 16rpx 0; border-bottom: 1rpx solid #f5f5f5; }
+.branch-item:last-child { border: none; }
+.branch-name { font-size: 28rpx; color: #333; }
+.branch-count { font-size: 24rpx; color: #999; }
 .content-section { background: #fff; padding: 24rpx; }

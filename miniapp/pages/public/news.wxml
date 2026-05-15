@@ -1,0 +1,12 @@
+<view class="page">
+  <view class="news-item" wx:for="{{items}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+    <image class="n-cover" src="{{item.cover_image}}" mode="aspectFill" wx:if="{{item.cover_image}}"/>
+    <view class="n-info">
+      <text class="n-title">{{item.title}}</text>
+      <text class="n-summary" wx:if="{{item.summary}}">{{item.summary}}</text>
+      <text class="n-time">{{item.event_time}}</text>
+    </view>
+  </view>
+  <view class="empty" wx:if="{{items.length === 0 && !loading}}">暂无动态</view>
+  <view class="load-more" wx:if="{{hasMore}}" bindtap="loadMore">{{loading ? '加载中...' : '加载更多'}}</view>
+</view>

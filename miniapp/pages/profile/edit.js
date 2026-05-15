@@ -3,8 +3,41 @@ Page({
   data: { form: {} },
   onLoad() { this.loadProfile() },
   async loadProfile() {
-    try { const res = await app.request({ url: '/profile/' }); this.setData({ form: { phone: res.member?.work_unit ? '' : '', work_unit: res.member?.work_unit || '', work_position: res.member?.work_position || '', title: res.member?.title || '', education: res.member?.education || '', school: res.member?.school || '', specialty: res.member?.specialty || '', social_position: res.member?.social_position || '' } }) } catch (e) {}
+    try {
+      const res = await app.request({ url: '/profile/' })
+      const m = res.member || {}
+      // 同步 memberId
+      if (m.id) {
+        app.globalData.memberId = m.id
+        wx.setStorageSync('memberId', m.id)
+      }
+      this.setData({
+        form: {
+          work_unit: m.work_unit || '',
+          work_position: m.work_position || '',
+          title: m.title || '',
+          education: m.education || '',
+          school: m.school || '',
+          specialty: m.specialty || '',
+          social_position: m.social_position || ''
+        }
+      })
+    } catch (e) {}
   },
-  onFieldChange(e) { const { field } = e.currentTarget.dataset; this.setData({ [`form.${field}`]: e.detail.value }) },
-  async submit() { try { await app.request({ url: `/members/${getApp().globalData.memberId}`, method: 'PUT', data: this.data.form }); wx.showToast({ title: '提交成功，等待审核' }); wx.navigateBack() } catch (e) {} }
+  onFieldChange(e) {
+    const { field } = e.currentTarget.dataset
+    this.setData({ [`form.${field}`]: e.detail.value })
+  },
+  async submit() {
+    const mid = app.globalData.memberId
+    if (!mid) {
+      wx.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
+    try {
+      await app.request({ url: `/members/${mid}`, method: 'PUT', data: this.data.form })
+      wx.showToast({ title: '保存成功' })
+      wx.navigateBack()
+    } catch (e) {}
+  }
 })

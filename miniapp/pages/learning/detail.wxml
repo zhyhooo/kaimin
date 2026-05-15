@@ -1,0 +1,23 @@
+<view class="page" wx:if="{{detail}}">
+  <image class="cover" src="{{detail.cover_image}}" mode="aspectFill" wx:if="{{detail.cover_image}}"/>
+  <view class="header">
+    <text class="title">{{detail.title}}</text>
+    <view class="meta">
+      <text class="meta-tag">{{detail.category}}</text>
+      <text wx:if="{{detail.is_required}}" class="meta-required">必读</text>
+    </view>
+  </view>
+  <view class="body" wx:if="{{detail.content}}">
+    <rich-text nodes="{{detail.content}}"></rich-text>
+  </view>
+  <view class="file-area" wx:if="{{detail.file_url}}">
+    <text class="file-tip">📎 附件资料（{{detail.file_type || '文件'}}）</text>
+    <text class="file-link">{{detail.file_url}}</text>
+  </view>
+  <view class="tags" wx:if="{{detail.tags && detail.tags.length}}">
+    <text class="tag" wx:for="{{detail.tags}}" wx:key="*this">{{item}}</text>
+  </view>
+  <view class="footer">
+    <text class="view-count">👁 阅读 {{detail.view_count || 0}} 次</text>
+  </view>
+</view>

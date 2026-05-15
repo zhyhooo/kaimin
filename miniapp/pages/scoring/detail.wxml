@@ -1,10 +1,14 @@
 <view class="page">
   <view class="record-item" wx:for="{{records}}" wx:key="id">
     <view class="r-info">
-      <text class="r-desc">{{item.description || item.name || item.event}}</text>
-      <text class="r-time">{{item.create_time || item.time}}</text>
+      <text class="r-dim">{{item.dimension}}</text>
+      <text class="r-desc">{{item.reason}}</text>
+      <text class="r-time">{{item.created_at}}</text>
     </view>
-    <text class="r-score {{item.score > 0 ? 'plus' : 'minus'}}">{{item.score > 0 ? '+' : ''}}{{item.score}}</text>
+    <view class="r-score-wrap">
+      <text class="r-score">{{item.verified_score || 0}}</text>
+      <text class="r-unit">分</text>
+    </view>
   </view>
   <view class="empty" wx:if="{{records.length === 0}}">暂无积分记录</view>
 </view>

@@ -1,0 +1,15 @@
+<view class="page">
+  <view class="header-tip">
+    <text>📝 撰写思想汇报</text>
+    <text class="hint">提交后将自动获得政治思想维度积分（+5分）</text>
+  </view>
+  <view class="form-section">
+    <view class="form-item">
+      <text class="label">汇报内容</text>
+      <textarea class="textarea" placeholder="请输入思想汇报内容..." value="{{content}}" bindinput="onFieldChange" data-field="content" auto-height maxlength="3000"/>
+    </view>
+  </view>
+  <view class="submit-area">
+    <button class="btn-submit" bindtap="submit">提交思想汇报</button>
+  </view>
+</view>

@@ -1,9 +1,9 @@
 <view class="page">
   <!-- 顶部用户卡片 -->
-  <view class="user-card" bindtap="goProfile">
+  <view class="user-card" bindtap="{{isLoggedIn ? 'goProfile' : 'handleLogin'}}">
     <image class="avatar" src="{{member.avatar || '/assets/default-avatar.png'}}" mode="aspectFill" />
     <view class="user-info">
-      <text class="name">{{member.name || '点击登录'}}</text>
+      <text class="name">{{isLoggedIn ? (member.name || '已登录') : '点击登录'}}</text>
       <text class="branch">{{member.org_position || ''}}</text>
     </view>
     <view class="badge" wx:if="{{unreadCount > 0}}">{{unreadCount}}</view>
@@ -59,6 +59,14 @@
     <navigator class="grid-item" url="/pages/learning/learning">
       <text class="icon">📚</text>
       <text>学习园地</text>
+    </navigator>
+    <navigator class="grid-item" url="/pages/public/organization">
+      <text class="icon">🏛️</text>
+      <text>组织介绍</text>
+    </navigator>
+    <navigator class="grid-item" url="/pages/public/news">
+      <text class="icon">📰</text>
+      <text>公开动态</text>
     </navigator>
   </view>
 </view>

@@ -3,13 +3,14 @@
     <input class="search-input" placeholder="搜索学习资料" value="{{keyword}}" bindinput="onSearch" confirm-type="search"/>
   </view>
   <view class="material-list">
-    <view class="material-item" wx:for="{{materials}}" wx:key="id">
+    <view class="material-item" wx:for="{{materials}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
       <view class="m-icon">📄</view>
       <view class="m-info">
         <text class="m-title">{{item.title}}</text>
-        <text class="m-category" wx:if="{{item.category}}">{{item.category}}</text>
-        <text class="m-time">{{item.create_time}}</text>
+        <text class="m-category" wx:if="{{item.category_label}}">{{item.category_label}}</text>
+        <text class="m-time">{{item.created_at}}</text>
       </view>
+      <text class="m-arrow">→</text>
     </view>
   </view>
   <view class="empty" wx:if="{{materials.length === 0}}">暂无学习资料</view>

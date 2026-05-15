@@ -5,11 +5,30 @@ Page({
     member: null,
     notices: [],
     recentEvent: null,
-    unreadCount: 0
+    unreadCount: 0,
+    isLoggedIn: false
   },
 
   onShow() {
-    this.loadData()
+    this.setData({ isLoggedIn: !!app.globalData.token })
+    if (app.globalData.token) {
+      this.loadData()
+    }
+  },
+
+  // 点击登录
+  async handleLogin() {
+    try {
+      wx.showLoading({ title: '登录中...' })
+      await app.wxLogin()
+      wx.hideLoading()
+      wx.showToast({ title: '登录成功', icon: 'success' })
+      this.setData({ isLoggedIn: true })
+      this.loadData()
+    } catch (e) {
+      wx.hideLoading()
+      wx.showToast({ title: '登录失败，请重试', icon: 'none' })
+    }
   },
 
   async loadData() {
@@ -20,6 +39,12 @@ Page({
         app.request({ url: '/events/' })
       ])
 
+      // 同步 memberId 到 globalData
+      if (profileRes.member && profileRes.member.id) {
+        app.globalData.memberId = profileRes.member.id
+        wx.setStorageSync('memberId', profileRes.member.id)
+      }
+
       this.setData({
         member: profileRes.member,
         notices: (noticeRes || []).slice(0, 3),
@@ -27,7 +52,7 @@ Page({
         unreadCount: profileRes.unread_messages || 0
       })
     } catch (e) {
-      // 未登录时显示公开内容
+      // 未登录时仅显示公开内容
     }
   },
 

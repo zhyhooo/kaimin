@@ -1,1 +1,11 @@
-Page({ data: {}, onLoad() { try { wx.request({ url: 'https://api.kaimin.org/public/guide', success: (res) => { if (res.statusCode === 200) { this.setData({ guide: res.data }) } } }) } catch (e) {} } })
+const app = getApp()
+Page({
+  data: { guide: null },
+  onLoad() {
+    try {
+      app.request({ url: '/public/guide', noAuth: true }).then(res => {
+        this.setData({ guide: res })
+      })
+    } catch (e) {}
+  }
+})

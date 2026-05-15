@@ -5,7 +5,10 @@
       <text class="title">{{item.title}}</text>
       <text class="time">🕐 {{item.event_time}}</text>
       <text class="location">📍 {{item.location}}</text>
-      <text class="status {{item.status}}">{{item.status === 'open' ? '报名中' : item.status === 'closed' ? '已截止' : '已结束'}}</text>
+      <view class="tags">
+        <text class="tag branch">{{item._branchName}}</text>
+        <text class="tag {{item._status}}">{{item._ended ? '已结束' : (item._status === 'closed' ? '已截止' : '报名中')}}</text>
+      </view>
     </view>
   </view>
   <view class="empty" wx:if="{{events.length === 0}}">暂无活动</view>

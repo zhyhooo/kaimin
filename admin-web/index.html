@@ -124,6 +124,8 @@ tr:hover{background:#f5f9ff}
           </td>
         </tr></table>
       </div>
+      <div class="card"><h2>角色权限</h2><table><tr><th>角色</th><th>菜单权限</th><th>数据权限</th></tr>
+      <tr v-for="r in roles" :key="r.name"><td>{{r.label}}</td><td>{{r.menus.join(', ')}}</td><td>{{r.dataScope}}</td></tr></table></div>
       <!-- 用户弹窗 -->
       <div v-if="showUserModal" class="modal-overlay" @click.self="showUserModal=false">
         <div class="modal">
@@ -262,6 +264,7 @@ tr:hover{background:#f5f9ff}
           <td><span class="badge" :class="e.status==='published'?'badge-green':(e.status==='draft'?'badge-orange':'badge-blue')">{{e.status}}</span></td>
           <td>
             <button class="btn btn-default btn-sm" @click="editEvent(e)">编辑</button>
+            <button class="btn btn-default btn-sm" @click="exportRegistrations(e.id)">📥 导出名单</button>
             <button class="btn btn-danger btn-sm" @click="deleteEvent(e.id)">删除</button>
           </td>
         </tr></table>
@@ -463,6 +466,11 @@ createApp({
       stats: {},
       // 用户管理
       adminUsers: [], showUserModal: false, editingUser: null, userForm: {phone:'',role:'org_leader'},
+      roles: [
+        {name:'super_admin',label:'超级管理员',menus:['全部'],dataScope:'全体'},
+        {name:'org_leader',label:'总支委员',menus:['会员管理','支部管理','活动管理','积分规则','社情民意','阵地审批','通知管理'],dataScope:'全体'},
+        {name:'branch_leader',label:'支部主委',menus:['活动管理'],dataScope:'本支部'}
+      ],
       // 会员管理
       memberList: [], memberKeyword: '', showMemberModal: false, editingMember: null, memberForm: {}, branches: [],
       showImportModal: false, selectedFile: null, importing: false, importResult: null,
@@ -630,6 +638,14 @@ createApp({
     },
     editEvent(e){ this.editingEvent=e; this.eventForm={title:e.title,event_time:e.event_time?.replace(' ','T')||'',location:e.location|| '',max_participants:e.max_participants||0,description:e.description|| '',cover_image:e.cover_image|| ''}; this.showEventModal=true },
     async deleteEvent(id){ if(!confirm('确认删除?'))return; try{ await this.api('/events/'+id,'DELETE'); await this.loadEvents() } catch(e){ alert('删除失败') } },
+    exportRegistrations(eventId){
+      const a = document.createElement('a')
+      a.href = '/events/' + eventId + '/registrations/export'
+      a.download = ''
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    },
     // ===== 社情民意 =====
     async loadSocial(){ try{ this.socialList=await this.api('/social-info/admin')||[] } catch(e){} },
     async saveSocial(){

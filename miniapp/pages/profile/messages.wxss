@@ -1,0 +1,14 @@
+.page { background: #f5f5f5; min-height: 100vh; }
+.header-bar { display: flex; justify-content: space-between; align-items: center; padding: 24rpx 30rpx; background: #fff; }
+.header-bar .title { font-size: 34rpx; font-weight: bold; color: #333; }
+.btn-all-read { font-size: 26rpx; color: #C41E2E; }
+.msg-list { background: #fff; }
+.msg-item { display: flex; align-items: flex-start; padding: 24rpx 30rpx; border-bottom: 1rpx solid #f0f0f0; }
+.msg-item.unread { background: #FFF8F8; }
+.msg-dot { width: 14rpx; height: 14rpx; border-radius: 50%; background: #C41E2E; margin-top: 8rpx; margin-right: 16rpx; flex-shrink: 0; }
+.msg-content { flex: 1; }
+.msg-title { font-size: 28rpx; color: #333; display: block; margin-bottom: 6rpx; }
+.msg-body { font-size: 24rpx; color: #999; display: block; margin-bottom: 6rpx; line-height: 1.5; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.msg-time { font-size: 22rpx; color: #bbb; }
+.empty { text-align: center; color: #999; font-size: 28rpx; padding: 60rpx 0; }
+.load-more { text-align: center; color: #999; font-size: 26rpx; padding: 30rpx 0; }

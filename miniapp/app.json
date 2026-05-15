@@ -9,15 +9,20 @@
     "pages/member/detail",
     "pages/profile/profile",
     "pages/profile/edit",
+    "pages/profile/messages",
     "pages/scoring/scoring",
     "pages/scoring/detail",
+    "pages/scoring/thought",
     "pages/social-sentiment/submit",
     "pages/social-sentiment/list",
     "pages/venue/venue",
     "pages/venue/booking",
     "pages/learning/learning",
+    "pages/learning/detail",
     "pages/public/organization",
-    "pages/public/guide"
+    "pages/public/guide",
+    "pages/public/news",
+    "pages/public/news-detail"
   ],
   "window": {
     "backgroundTextStyle": "light",

@@ -2,13 +2,12 @@
   <view class="info-item" wx:for="{{list}}" wx:key="id">
     <view class="info-header">
       <text class="title">{{item.title}}</text>
-      <text class="status {{item.status}}">{{item.status === 'pending' ? '待审核' : item.status === 'approved' ? '已通过' : item.status === 'rejected' ? '已退回' : item.status}}</text>
+      <text class="status">{{item.status === 'pending' ? '待审核' : item.status === 'city_adopted' ? '市级录用' : item.status === 'province_adopted' ? '省级录用' : item.status === 'national_adopted' ? '全国录用' : item.status === 'rejected' ? '未录用' : item.status}}</text>
     </view>
-    <text class="preview">{{item.content}}</text>
     <view class="meta" wx:if="{{item.is_joint}}">
       <text class="joint-tag">联名</text>
     </view>
-    <text class="time">{{item.create_time}}</text>
+    <text class="time">{{item.created_at}}</text>
   </view>
   <view class="empty" wx:if="{{list.length === 0}}">暂无社情民意</view>
 </view>

@@ -14,3 +14,5 @@
 .arrow { font-size: 32rpx; color: #ccc; }
 .right { display: flex; align-items: center; }
 .msg-badge { background: #C41E2E; color: #fff; font-size: 20rpx; padding: 2rpx 10rpx; border-radius: 20rpx; margin-right: 10rpx; }
+.logout-section { padding: 40rpx 20rpx; }
+.btn-logout { background: #fff; color: #999; border: 1rpx solid #ddd; border-radius: 40rpx; font-size: 28rpx; }

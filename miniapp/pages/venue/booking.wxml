@@ -8,8 +8,8 @@
     </view>
     <view class="form-item">
       <text class="label">时间段</text>
-      <picker range="{{slots}}" value="{{slotIndex}}" bindchange="onSlotChange">
-        <view class="picker-val">{{slot || '请选择时间段'}}</view>
+      <picker range="{{slotLabels}}" value="{{slotIndex}}" bindchange="onSlotChange">
+        <view class="picker-val">{{slotLabels[slotIndex] || '请选择时间段'}}</view>
       </picker>
     </view>
     <view class="form-item">

@@ -1,9 +1,8 @@
 <view class="page" wx:if="{{venue}}">
-  <image class="cover" src="{{venue.cover_image}}" mode="aspectFill" wx:if="{{venue.cover_image}}"/>
+  <image class="cover" src="{{venue.photos[0]}}" mode="aspectFill" wx:if="{{venue.photos && venue.photos.length}}"/>
   <view class="header">
     <text class="name">{{venue.name}}</text>
     <text class="address">📍 {{venue.address}}</text>
-    <text class="desc" wx:if="{{venue.description}}">{{venue.description}}</text>
   </view>
   <view class="info-section">
     <view class="info-row" wx:if="{{venue.open_time}}">
@@ -14,9 +13,17 @@
       <text class="label">容纳人数</text>
       <text class="value">{{venue.capacity}}人</text>
     </view>
-    <view class="info-row" wx:if="{{venue.facilities}}">
-      <text class="label">设施</text>
-      <text class="value">{{venue.facilities}}</text>
+    <view class="info-row" wx:if="{{venue.equipment && venue.equipment.length}}">
+      <text class="label">设备</text>
+      <text class="value">{{venue.equipment.join('、')}}</text>
+    </view>
+    <view class="info-row" wx:if="{{venue.contact}}">
+      <text class="label">联系方式</text>
+      <text class="value">{{venue.contact}}</text>
+    </view>
+    <view class="info-row" wx:if="{{venue.rules}}">
+      <text class="label">使用规定</text>
+      <text class="value">{{venue.rules}}</text>
     </view>
   </view>
   <view class="btn-area">

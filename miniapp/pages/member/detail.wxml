@@ -2,23 +2,28 @@
   <view class="profile-card">
     <image class="avatar" src="{{member.avatar || '/assets/default-avatar.png'}}" mode="aspectFill"/>
     <text class="name">{{member.name}}</text>
-    <text class="role">{{member.role_name || member.org_position || ''}}</text>
+    <text class="role" wx:if="{{member.org_position}}">{{member.org_position}}</text>
+    <text class="sub-info" wx:if="{{member.gender}}">{{member.gender}} · 入会 {{member.join_date || '---'}}</text>
   </view>
   <view class="info-section">
-    <view class="info-row" wx:if="{{member.mobile}}">
-      <text class="label">手机</text>
-      <text class="value">{{member.mobile}}</text>
-    </view>
     <view class="info-row" wx:if="{{member.branch_name}}">
       <text class="label">所属支部</text>
       <text class="value">{{member.branch_name}}</text>
+    </view>
+    <view class="info-row" wx:if="{{member.native_place}}">
+      <text class="label">籍贯</text>
+      <text class="value">{{member.native_place}}</text>
+    </view>
+    <view class="info-row" wx:if="{{member.birth_date}}">
+      <text class="label">出生年月</text>
+      <text class="value">{{member.birth_date}}</text>
     </view>
     <view class="info-row" wx:if="{{member.work_unit}}">
       <text class="label">工作单位</text>
       <text class="value">{{member.work_unit}}</text>
     </view>
     <view class="info-row" wx:if="{{member.work_position}}">
-      <text class="label">职务</text>
+      <text class="label">工作职务</text>
       <text class="value">{{member.work_position}}</text>
     </view>
     <view class="info-row" wx:if="{{member.title}}">
@@ -34,7 +39,7 @@
       <text class="value">{{member.school}}</text>
     </view>
     <view class="info-row" wx:if="{{member.specialty}}">
-      <text class="label">专业</text>
+      <text class="label">专业特长</text>
       <text class="value">{{member.specialty}}</text>
     </view>
     <view class="info-row" wx:if="{{member.social_position}}">

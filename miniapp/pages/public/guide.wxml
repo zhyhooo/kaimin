@@ -1,8 +1,37 @@
 <view class="page" wx:if="{{guide}}">
   <view class="header">
-    <text class="title">{{guide.title}}</text>
+    <text class="title">入会指南</text>
+    <text class="subtitle">中国民主促进会杭州市富阳区总支部</text>
   </view>
-  <view class="body">
-    <rich-text nodes="{{guide.content}}"></rich-text>
+
+  <view class="section">
+    <view class="section-title">入会条件</view>
+    <view class="condition-item" wx:for="{{guide.conditions}}" wx:key="*this">
+      <text class="dot">·</text>
+      <text>{{item}}</text>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">入会流程</view>
+    <view class="process-item" wx:for="{{guide.process}}" wx:key="*this">
+      <text>{{item}}</text>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">联系我们</view>
+    <view class="contact-item" wx:if="{{guide.contact.phone}}">
+      <text class="lbl">电话</text>
+      <text class="val">{{guide.contact.phone}}</text>
+    </view>
+    <view class="contact-item" wx:if="{{guide.contact.address}}">
+      <text class="lbl">地址</text>
+      <text class="val">{{guide.contact.address}}</text>
+    </view>
+    <view class="contact-item" wx:if="{{guide.contact.office_hours}}">
+      <text class="lbl">办公时间</text>
+      <text class="val">{{guide.contact.office_hours}}</text>
+    </view>
   </view>
 </view>
