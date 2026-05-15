@@ -1,0 +1,35 @@
+<div class="card">
+  <div class="toolbar">
+    <h2 style="border:none;margin:0;padding:0">管理员账号</h2>
+    <button class="btn btn-primary" @click="$root.showUserModal=true;$root.editingUser=null;$root.userForm={phone:'',role:'org_leader'}">+ 新增管理员</button>
+  </div>
+  <table><tr><th>ID</th><th>手机号</th><th>角色</th><th>状态</th><th>最后登录</th><th>操作</th></tr>
+  <tr v-for="u in $root.adminUsers" :key="u.id">
+    <td>{{ u.id }}</td><td>{{ u.phone }}</td>
+    <td><span class="badge" :class="u.role==='super_admin'?'badge-red':'badge-blue'">{{ $root.roleLabel(u.role) }}</span></td>
+    <td><span :style="{color:u.is_active?'#52c41a':'#ff4d4f'}">{{ u.is_active?'启用':'禁用' }}</span></td>
+    <td>{{ $root.fmtTime(u.last_login) }}</td>
+    <td>
+      <button class="btn btn-default btn-sm" @click="$root.editUser(u)">编辑</button>
+      <button class="btn btn-sm" :class="u.is_active?'btn-warning':'btn-success'" @click="$root.toggleUser(u)">{{ u.is_active?'禁用':'启用' }}</button>
+      <button class="btn btn-danger btn-sm" @click="$root.deleteUser(u.id)">删除</button>
+    </td>
+  </tr></table>
+</div>
+<div class="card"><h2>角色权限</h2><table><tr><th>角色</th><th>菜单权限</th><th>数据权限</th></tr>
+<tr v-for="r in $root.roles" :key="r.name"><td>{{ r.label }}</td><td>{{ r.menus.join(', ') }}</td><td>{{ r.dataScope }}</td></tr></table></div>
+<div v-if="$root.showUserModal" class="modal-overlay" @click.self="$root.showUserModal=false">
+  <div class="modal">
+    <h2>{{ $root.editingUser?'编辑':'新增' }}管理员</h2>
+    <div class="form-group"><label>手机号</label><input v-model="$root.userForm.phone" placeholder="请输入手机号"></div>
+    <div class="form-group"><label>角色</label>
+      <select v-model="$root.userForm.role">
+        <option value="super_admin">超级管理员</option>
+        <option value="org_leader">总支委员</option>
+        <option value="branch_leader">支部主委</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" @click="$root.saveUser">保存</button>
+    <button class="btn btn-default" @click="$root.showUserModal=false">取消</button>
+  </div>
+</div>

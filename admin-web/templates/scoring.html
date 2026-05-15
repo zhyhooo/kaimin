@@ -1,0 +1,26 @@
+<div class="card">
+  <div class="toolbar">
+    <h2 style="border:none;margin:0;padding:0">积分规则配置</h2>
+    <button class="btn btn-success" @click="$root.showAddRule=true;$root.editingRule=null;$root.newRule={dimension:'meeting',activity_type:'',score:5,max_score:20}">+ 新增规则</button>
+  </div>
+  <table><tr><th>维度</th><th>活动类型</th><th>单次分值</th><th>上限</th><th>周期</th><th>操作</th></tr>
+  <tr v-for="r in $root.scoreRules" :key="r.id"><td>{{ $root.dimLabel(r.dimension) }}</td><td>{{ r.activity_type }}</td><td>{{ r.score }}</td><td>{{ r.max_score||'无' }}</td><td>{{ r.period==='year'?'年度':'季度' }}</td>
+    <td>
+      <button class="btn btn-default btn-sm" @click="$root.editRule(r)">编辑</button>
+      <button class="btn btn-danger btn-sm" @click="$root.deleteRule(r.id)">删除</button>
+    </td>
+  </tr></table>
+</div>
+<div v-if="$root.showAddRule" class="modal-overlay" @click.self="$root.showAddRule=false">
+  <div class="modal">
+    <h2>{{ $root.editingRule?'编辑':'新增' }}积分规则</h2>
+    <div class="form-group"><label>维度</label><select v-model="$root.newRule.dimension"><option v-for="d in $root.dims" :value="d.value" :key="d.value">{{ d.label }}</option></select></div>
+    <div class="form-group"><label>活动类型</label><input v-model="$root.newRule.activity_type"></div>
+    <div class="form-row">
+      <div class="form-group"><label>单次分值</label><input type="number" v-model="$root.newRule.score"></div>
+      <div class="form-group"><label>上限分值</label><input type="number" v-model="$root.newRule.max_score"></div>
+    </div>
+    <button class="btn btn-primary" @click="$root.saveRule">保存</button>
+    <button class="btn btn-default" @click="$root.showAddRule=false">取消</button>
+  </div>
+</div>

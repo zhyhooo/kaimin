@@ -1,0 +1,36 @@
+<div class="card">
+  <div class="toolbar">
+    <h2 style="border:none;margin:0;padding:0">支部列表</h2>
+    <button class="btn btn-success" @click="$root.showBranchModal=true;$root.editingBranch=null;$root.branchForm={name:'',parent_id:null,leader_name:'',leader_phone:'',sort_order:0}">+ 新建支部</button>
+  </div>
+  <table><tr><th>ID</th><th>名称</th><th>上级支部</th><th>主委</th><th>主委电话</th><th>会员数</th><th>排序</th><th>操作</th></tr>
+  <tr v-for="b in $root.branchList" :key="b.id">
+    <td>{{ b.id }}</td><td>{{ b.name }}</td>
+    <td>{{ b.parent_id?$root.branchList.find(x=>x.id===b.parent_id)?.name||'-':'（总支）' }}</td>
+    <td>{{ b.leader_name||'-' }}</td><td>{{ b.leader_phone||'-' }}</td>
+    <td>{{ b.member_count||0 }}</td><td>{{ b.sort_order }}</td>
+    <td>
+      <button class="btn btn-default btn-sm" @click="$root.editBranch(b)">编辑</button>
+      <button class="btn btn-danger btn-sm" @click="$root.deleteBranch(b.id)">删除</button>
+    </td>
+  </tr></table>
+</div>
+<div v-if="$root.showBranchModal" class="modal-overlay" @click.self="$root.showBranchModal=false">
+  <div class="modal">
+    <h2>{{ $root.editingBranch?'编辑':'新建' }}支部</h2>
+    <div class="form-group"><label>支部名称 *</label><input v-model="$root.branchForm.name" placeholder="如：第一支部"></div>
+    <div class="form-group"><label>上级支部</label>
+      <select v-model="$root.branchForm.parent_id">
+        <option :value="null">--无（作为总支）--</option>
+        <option v-for="b in $root.branchList" :value="b.id" :key="b.id" v-if="!$root.editingBranch||b.id!==$root.editingBranch.id">{{ b.name }}</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>主委姓名</label><input v-model="$root.branchForm.leader_name"></div>
+      <div class="form-group"><label>主委电话</label><input v-model="$root.branchForm.leader_phone"></div>
+    </div>
+    <div class="form-group"><label>排序</label><input type="number" v-model="$root.branchForm.sort_order"></div>
+    <button class="btn btn-primary" @click="$root.saveBranch">保存</button>
+    <button class="btn btn-default" @click="$root.showBranchModal=false">取消</button>
+  </div>
+</div>

@@ -175,6 +175,21 @@ async def adopt_info(
     return {"message": f"已标记为{level_display[data.level]}"}
 
 
+@router.delete("/{info_id}")
+async def delete_social_info(
+    info_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_leader)
+):
+    """删除社情民意"""
+    info = db.query(SocialInfo).filter(SocialInfo.id == info_id).first()
+    if not info:
+        raise HTTPException(status_code=404, detail="社情民意不存在")
+    db.delete(info)
+    db.commit()
+    return {"message": "已删除"}
+
+
 @router.get("/leaderboard")
 async def get_leaderboard(
     period: str = Query("year"),

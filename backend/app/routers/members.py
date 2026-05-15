@@ -34,8 +34,12 @@ class MemberCreate(BaseModel):
 
 
 class MemberUpdate(BaseModel):
-    """会员可自主编辑的字段"""
+    """会员编辑字段"""
+    name: Optional[str] = None
     phone: Optional[str] = None
+    id_card: Optional[str] = None
+    branch_id: Optional[int] = None
+    org_position: Optional[str] = None
     work_unit: Optional[str] = None
     work_position: Optional[str] = None
     title: Optional[str] = None
@@ -43,6 +47,8 @@ class MemberUpdate(BaseModel):
     school: Optional[str] = None
     specialty: Optional[str] = None
     social_position: Optional[str] = None
+    native_place: Optional[str] = None
+    join_date: Optional[date] = None
 
 
 class MemberResponse(BaseModel):
@@ -204,6 +210,27 @@ async def update_member(
         setattr(member, field, value)
     db.commit()
     return {"message": "更新成功", "id": member.id}
+
+
+@router.delete("/{member_id}")
+async def delete_member(
+    member_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_org_leader)
+):
+    """删除会员（组织委员以上）"""
+    member = db.query(Member).filter(Member.id == member_id).first()
+    if not member:
+        raise HTTPException(status_code=404, detail="会员不存在")
+
+    # 同时删除关联的 User
+    if member.user_id:
+        user = db.query(User).filter(User.id == member.user_id).first()
+        if user:
+            db.delete(user)
+    db.delete(member)
+    db.commit()
+    return {"message": "会员已删除"}
 
 
 @router.get("/export/excel")

@@ -1,0 +1,34 @@
+<div class="card">
+  <div class="toolbar">
+    <h2 style="border:none;margin:0;padding:0">活动列表</h2>
+    <button class="btn btn-success" @click="$root.showEventModal=true;$root.editingEvent=null;$root.eventForm={title:'',event_time:'',location:'',max_participants:0,content:'',cover_image:'',signup_deadline:''}">+ 新增活动</button>
+  </div>
+  <table><tr><th>ID</th><th>标题</th><th>时间</th><th>地点</th><th>报名/上限</th><th>状态</th><th>操作</th></tr>
+  <tr v-for="e in $root.eventList" :key="e.id">
+    <td>{{ e.id }}</td><td>{{ e.title }}</td><td>{{ e.event_time }}</td><td>{{ e.location||'-' }}</td><td>{{ e.signup_count||0 }}/{{ e.max_participants||'不限' }}</td>
+    <td><span class="badge" :class="e.status==='published'?'badge-green':(e.status==='draft'?'badge-orange':'badge-blue')">{{ e.status }}</span></td>
+    <td>
+      <button class="btn btn-default btn-sm" @click="$root.editEvent(e)">编辑</button>
+      <button class="btn btn-default btn-sm" @click="$root.exportRegistrations(e.id)">📥 导出名单</button>
+      <button class="btn btn-danger btn-sm" @click="$root.deleteEvent(e.id)">删除</button>
+    </td>
+  </tr></table>
+</div>
+<div v-if="$root.showEventModal" class="modal-overlay" @click.self="$root.showEventModal=false">
+  <div class="modal">
+    <h2>{{ $root.editingEvent?'编辑':'新增' }}活动</h2>
+    <div class="form-group"><label>标题 *</label><input v-model="$root.eventForm.title"></div>
+    <div class="form-row">
+      <div class="form-group"><label>活动时间 *</label><input type="datetime-local" v-model="$root.eventForm.event_time"></div>
+      <div class="form-group"><label>报名截止</label><input type="datetime-local" v-model="$root.eventForm.signup_deadline"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>地点</label><input v-model="$root.eventForm.location"></div>
+      <div class="form-group"><label>报名上限</label><input type="number" v-model="$root.eventForm.max_participants"></div>
+    </div>
+    <div class="form-group"><label>封面图URL</label><input v-model="$root.eventForm.cover_image"></div>
+    <div class="form-group"><label>活动描述</label><textarea v-model="$root.eventForm.content"></textarea></div>
+    <button class="btn btn-primary" @click="$root.saveEvent">保存</button>
+    <button class="btn btn-default" @click="$root.showEventModal=false">取消</button>
+  </div>
+</div>

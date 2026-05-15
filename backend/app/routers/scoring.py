@@ -138,6 +138,45 @@ async def create_score_rule(
     return {"id": rule.id, "message": "规则创建成功"}
 
 
+@router.put("/rules/{rule_id}")
+async def update_score_rule(
+    rule_id: int,
+    dimension: str, activity_type: str, score: float, max_score: Optional[float] = None,
+    period: str = "year",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_org_leader)
+):
+    """更新积分规则"""
+    rule = db.query(ScoreRule).filter(ScoreRule.id == rule_id).first()
+    if not rule:
+        raise HTTPException(status_code=404, detail="规则不存在")
+    try:
+        rule.dimension = ScoreDimension(dimension)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"无效维度: {dimension}")
+    rule.activity_type = activity_type
+    rule.score = score
+    rule.max_score = max_score
+    rule.period = period
+    db.commit()
+    return {"id": rule.id, "message": "规则更新成功"}
+
+
+@router.delete("/rules/{rule_id}")
+async def delete_score_rule(
+    rule_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_org_leader)
+):
+    """删除积分规则"""
+    rule = db.query(ScoreRule).filter(ScoreRule.id == rule_id).first()
+    if not rule:
+        raise HTTPException(status_code=404, detail="规则不存在")
+    db.delete(rule)
+    db.commit()
+    return {"message": "规则已删除"}
+
+
 @router.post("/candidate/{member_id}/thought-report")
 async def submit_thought_report(
     member_id: int,

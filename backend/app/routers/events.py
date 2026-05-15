@@ -18,11 +18,24 @@ class EventCreate(BaseModel):
     content: Optional[str] = None
     cover_image: Optional[str] = None
     event_time: datetime
-    location: str
+    location: Optional[str] = None
     max_participants: Optional[int] = None
-    signup_deadline: datetime
+    signup_deadline: Optional[datetime] = None
     contact_person: Optional[str] = None
     branch_id: Optional[int] = None  # None=全市
+
+
+class EventUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+    cover_image: Optional[str] = None
+    event_time: Optional[datetime] = None
+    location: Optional[str] = None
+    max_participants: Optional[int] = None
+    signup_deadline: Optional[datetime] = None
+    contact_person: Optional[str] = None
+    branch_id: Optional[int] = None
+    status: Optional[str] = None
 
 
 @router.get("/")
@@ -266,3 +279,37 @@ async def create_event(
     db.commit()
     db.refresh(event)
     return {"id": event.id, "message": "活动发布成功"}
+
+
+@router.put("/{event_id}")
+async def update_event(
+    event_id: int,
+    data: EventUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_leader)
+):
+    """更新活动"""
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="活动不存在")
+
+    update_data = data.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(event, key, value)
+    db.commit()
+    return {"id": event.id, "message": "活动更新成功"}
+
+
+@router.delete("/{event_id}")
+async def delete_event(
+    event_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_leader)
+):
+    """删除活动"""
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="活动不存在")
+    db.delete(event)
+    db.commit()
+    return {"message": "活动已删除"}

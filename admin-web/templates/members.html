@@ -1,0 +1,101 @@
+<div class="card">
+  <div class="toolbar">
+    <h2 style="border:none;margin:0;padding:0">会员列表</h2>
+    <div>
+      <input v-model="$root.memberKeyword" placeholder="搜索姓名/单位..." @keyup.enter="$root.loadMembers()">
+      <button class="btn btn-primary" @click="$root.loadMembers()" style="margin-left:8px">搜索</button>
+      <button class="btn btn-success" @click="$root.showMemberModal=true;$root.editingMember=null;$root.memberForm={name:'',phone:'',branch_id:null,org_position:'',join_date:''}">+ 新增会员</button>
+      <button class="btn btn-warning" @click="$root.showImportModal=true;$root.importResult=null">📥 批量导入</button>
+      <button class="btn btn-default" @click="$root.downloadTemplate">📋 下载模板</button>
+    </div>
+  </div>
+  <table><tr><th>ID</th><th>姓名</th><th>性别</th><th>支部</th><th>会内职务</th><th>入会时间</th><th>状态</th><th>操作</th></tr>
+  <tr v-for="m in $root.memberList" :key="m.id">
+    <td>{{ m.id }}</td><td>{{ m.name }}</td><td>{{ m.gender||'-' }}</td><td>{{ m.branch_name||'-' }}</td><td>{{ m.org_position||'-' }}</td><td>{{ m.join_date||'-' }}</td>
+    <td><span class="badge" :class="m.status==='active'?'badge-green':(m.status==='pending'?'badge-orange':'badge-red')">{{ $root.statusLabel(m.status) }}</span></td>
+    <td>
+      <button class="btn btn-default btn-sm" @click="$root.editMember(m)">编辑</button>
+      <button class="btn btn-danger btn-sm" @click="$root.deleteMember(m.id)">删除</button>
+    </td>
+  </tr></table>
+</div>
+<div v-if="$root.showMemberModal" class="modal-overlay" @click.self="$root.showMemberModal=false">
+  <div class="modal">
+    <h2>{{ $root.editingMember?'编辑':'新增' }}会员</h2>
+    <div class="form-row">
+      <div class="form-group"><label>姓名 *</label><input v-model="$root.memberForm.name"></div>
+      <div class="form-group"><label>手机号 *</label><input v-model="$root.memberForm.phone"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>身份证号</label><input v-model="$root.memberForm.id_card"></div>
+      <div class="form-group"><label>支部</label><select v-model="$root.memberForm.branch_id"><option :value="null">--选择--</option><option v-for="b in $root.branches" :value="b.id" :key="b.id">{{ b.name }}</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>会内职务</label><input v-model="$root.memberForm.org_position"></div>
+      <div class="form-group"><label>入会时间</label><input type="date" v-model="$root.memberForm.join_date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>工作单位</label><input v-model="$root.memberForm.work_unit"></div>
+      <div class="form-group"><label>工作职务</label><input v-model="$root.memberForm.work_position"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>职称</label><input v-model="$root.memberForm.title"></div>
+      <div class="form-group"><label>学历</label><input v-model="$root.memberForm.education"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>毕业院校</label><input v-model="$root.memberForm.school"></div>
+      <div class="form-group"><label>专业特长</label><input v-model="$root.memberForm.specialty"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>社会职务</label><input v-model="$root.memberForm.social_position"></div>
+      <div class="form-group"><label>籍贯</label><input v-model="$root.memberForm.native_place"></div>
+    </div>
+    <button class="btn btn-primary" @click="$root.saveMember">保存</button>
+    <button class="btn btn-default" @click="$root.showMemberModal=false">取消</button>
+  </div>
+</div>
+<div v-if="$root.showImportModal" class="modal-overlay" @click.self="$root.showImportModal=false">
+  <div class="modal" style="width:650px">
+    <h2>📥 批量导入会员</h2>
+    <div style="background:#f6ffed;border:1px solid #b7eb8f;border-radius:4px;padding:12px;margin-bottom:16px;font-size:13px">
+      <strong>📋 Excel 格式说明</strong>
+      <table style="margin-top:8px;font-size:12px">
+        <tr style="background:#f6ffed"><th style="background:#f6ffed;width:100px">列名</th><th style="background:#f6ffed;width:60px">必填</th><th style="background:#f6ffed">说明</th></tr>
+        <tr><td>姓名</td><td style="color:#52c41a">✅</td><td>会员真实姓名</td></tr>
+        <tr><td>手机号</td><td style="color:#52c41a">✅</td><td>11位手机号，不可重复</td></tr>
+        <tr><td>身份证号</td><td></td><td>18位，自动推算性别和出生年月</td></tr>
+        <tr><td>支部名称</td><td></td><td>需与系统中支部名称一致</td></tr>
+        <tr><td>会内职务</td><td></td><td>如：主委、副主委、会员</td></tr>
+        <tr><td>工作单位</td><td></td><td></td></tr>
+        <tr><td>工作职务</td><td></td><td></td></tr>
+        <tr><td>职称</td><td></td><td></td></tr>
+        <tr><td>学历</td><td></td><td></td></tr>
+        <tr><td>毕业院校</td><td></td><td></td></tr>
+        <tr><td>专业特长</td><td></td><td></td></tr>
+        <tr><td>社会职务</td><td></td><td></td></tr>
+        <tr><td>籍贯</td><td></td><td></td></tr>
+        <tr><td>入会时间</td><td></td><td>格式：2024-01-01 / 2024/01/01 / 20240101</td></tr>
+      </table>
+      <div style="margin-top:8px">
+        <a href="#" @click.prevent="$root.downloadTemplate" style="color:#1890ff">📥 下载Excel模板</a>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>选择Excel文件（.xlsx / .xls）</label>
+      <input type="file" accept=".xlsx,.xls" @change="$root.onFileSelected">
+    </div>
+    <div v-if="$root.importing" style="text-align:center;padding:12px;color:#1890ff">正在导入中...</div>
+    <div v-if="$root.importResult" style="margin-top:12px">
+      <div :style="{padding:'12px',borderRadius:'4px',background:$root.importResult.error_count>0?'#fff7e6':'#f6ffed',border:'1px solid '+($root.importResult.error_count>0?'#ffd591':'#b7eb8f')}">
+        <strong>{{ $root.importResult.message }}</strong>
+      </div>
+      <div v-if="$root.importResult.errors && $root.importResult.errors.length>0" style="margin-top:8px;max-height:200px;overflow-y:auto;font-size:12px">
+        <div v-for="(err,i) in $root.importResult.errors" :key="i" style="color:#ff4d4f;padding:2px 0">{{ err }}</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;text-align:right">
+      <button class="btn btn-primary" @click="$root.doImport" :disabled="!$root.selectedFile||$root.importing">{{ $root.importing?'导入中...':'开始导入' }}</button>
+      <button class="btn btn-default" @click="$root.showImportModal=false;$root.selectedFile=null;$root.importResult=null">关闭</button>
+    </div>
+  </div>
+</div>

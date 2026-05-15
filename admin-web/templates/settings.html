@@ -1,0 +1,12 @@
+<div class="card"><h2>邮件配置</h2>
+  <div class="form-group"><label>SMTP主机</label><input v-model="$root.config.email_host"></div>
+  <div class="form-group"><label>SMTP端口</label><input v-model="$root.config.email_port" type="number"></div>
+  <div class="form-group"><label>发件邮箱</label><input v-model="$root.config.email_user"></div>
+  <div class="form-group"><label>市委会信息处邮箱</label><input v-model="$root.config.email_target"></div>
+  <button class="btn btn-primary" @click="$root.saveConfig('email')">保存邮件配置</button>
+</div>
+<div class="card"><h2>微信通知模板</h2>
+  <div class="form-group"><label>催办通知模板ID</label><input v-model="$root.config.notify_template_id"></div>
+  <div class="form-group"><label>审核结果模板ID</label><input v-model="$root.config.audit_template_id"></div>
+  <button class="btn btn-primary" @click="$root.saveConfig('wechat')">保存通知配置</button>
+</div>

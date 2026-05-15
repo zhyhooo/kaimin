@@ -1,0 +1,8 @@
+<div class="card"><h2>待审批预约</h2>
+  <div v-if="$root.pendingBookings.length===0" class="empty">暂无待审批预约</div>
+  <table v-else><tr><th>场地</th><th>日期</th><th>时段</th><th>用途</th><th>人数</th><th>联系人</th><th>操作</th></tr>
+  <tr v-for="b in $root.pendingBookings" :key="b.id"><td>{{ b.venue_id }}</td><td>{{ b.date }}</td><td>{{ b.time_slot }}</td><td>{{ b.purpose }}</td><td>{{ b.people_count }}</td><td>{{ b.contact_name }} {{ b.contact_phone }}</td>
+    <td><button class="btn btn-success btn-sm" @click="$root.approveBooking(b.id)">通过</button>
+        <button class="btn btn-danger btn-sm" @click="$root.rejectBooking(b.id)">驳回</button></td>
+  </tr></table>
+</div>

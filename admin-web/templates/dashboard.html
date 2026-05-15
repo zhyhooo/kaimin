@@ -1,0 +1,8 @@
+<div class="stat-grid">
+  <div class="stat-card"><div class="num">{{ $root.stats.total_members||0 }}</div><div class="label">会员总数</div></div>
+  <div class="stat-card"><div class="num">{{ $root.stats.active_events||0 }}</div><div class="label">进行中活动</div></div>
+  <div class="stat-card"><div class="num">{{ $root.stats.total_infos||0 }}</div><div class="label">社情民意</div></div>
+  <div class="stat-card"><div class="num">{{ $root.stats.pending_bookings||0 }}</div><div class="label">待审批预约</div></div>
+</div>
+<div class="card"><h2>活动参与率</h2><div class="chart-box" id="chart-events"></div></div>
+<div class="card"><h2>社情民意趋势</h2><div class="chart-box" id="chart-infos"></div></div>

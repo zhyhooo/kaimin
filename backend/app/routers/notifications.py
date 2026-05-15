@@ -163,3 +163,37 @@ async def create_notification(
     db.commit()
     db.refresh(notification)
     return {"id": notification.id, "message": "发布成功"}
+
+
+@router.put("/{notification_id}")
+async def update_notification(
+    notification_id: int,
+    data: NotificationCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_leader)
+):
+    """更新通知"""
+    notification = db.query(Notification).filter(Notification.id == notification_id).first()
+    if not notification:
+        raise HTTPException(status_code=404, detail="通知不存在")
+
+    update_data = data.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(notification, key, value)
+    db.commit()
+    return {"id": notification.id, "message": "更新成功"}
+
+
+@router.delete("/{notification_id}")
+async def delete_notification(
+    notification_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_leader)
+):
+    """删除通知"""
+    notification = db.query(Notification).filter(Notification.id == notification_id).first()
+    if not notification:
+        raise HTTPException(status_code=404, detail="通知不存在")
+    db.delete(notification)
+    db.commit()
+    return {"message": "已删除"}
