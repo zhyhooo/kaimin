@@ -70,7 +70,7 @@ async def list_notifications(
             NotificationRead.user_id == current_user.id
         ).first()
         result.append({
-            "id": n.id, "title": n.title, "cover_image": n.cover_image,
+            "id": n.id, "title": n.title, "content": n.content, "cover_image": n.cover_image,
             "event_time": str(n.event_time) if n.event_time else None,
             "location": n.location, "is_pinned": n.is_pinned,
             "publish_time": str(n.publish_time),

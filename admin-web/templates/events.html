@@ -3,9 +3,9 @@
     <h2 style="border:none;margin:0;padding:0">活动列表</h2>
     <button class="btn btn-success" @click="$root.showEventModal=true;$root.editingEvent=null;$root.eventForm={title:'',event_time:'',location:'',max_participants:0,content:'',cover_image:'',signup_deadline:''}">+ 新增活动</button>
   </div>
-  <table><tr><th>ID</th><th>标题</th><th>时间</th><th>地点</th><th>报名/上限</th><th>状态</th><th>操作</th></tr>
+  <table><tr><th>ID</th><th>标题</th><th>活动时间</th><th>报名截止</th><th>地点</th><th>报名/上限</th><th>状态</th><th>操作</th></tr>
   <tr v-for="e in $root.eventList" :key="e.id">
-    <td>{{ e.id }}</td><td>{{ e.title }}</td><td>{{ e.event_time }}</td><td>{{ e.location||'-' }}</td><td>{{ e.signup_count||0 }}/{{ e.max_participants||'不限' }}</td>
+    <td>{{ e.id }}</td><td>{{ e.title }}</td><td>{{ $root.fmtTime(e.event_time) }}</td><td>{{ $root.fmtTime(e.signup_deadline) }}</td><td>{{ e.location||'-' }}</td><td>{{ e.signup_count||0 }}/{{ e.max_participants||'不限' }}</td>
     <td><span class="badge" :class="e.status==='published'?'badge-green':(e.status==='draft'?'badge-orange':'badge-blue')">{{ e.status }}</span></td>
     <td>
       <button class="btn btn-default btn-sm" @click="$root.editEvent(e)">编辑</button>

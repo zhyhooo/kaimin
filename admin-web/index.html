@@ -350,6 +350,7 @@ createApp({
     editEvent(e){ this.editingEvent=e; this.eventForm={title:e.title,event_time:e.event_time?.replace(' ','T')||'',location:e.location|| '',max_participants:e.max_participants||0,content:e.content|| '',cover_image:e.cover_image|| '',signup_deadline:(e.signup_deadline||'').replace(' ','T')}; this.showEventModal=true },
     async deleteEvent(id){ if(!confirm('确认删除?'))return; try{ await this.api('/events/'+id,'DELETE'); await this.loadEvents() }catch(e){ alert('删除失败') } },
     exportRegistrations(eventId){
+      if(!confirm('确认导出该活动的报名名单？')) return
       const a = document.createElement('a')
       a.href = '/events/' + eventId + '/registrations/export'
       a.download = ''; document.body.appendChild(a); a.click(); document.body.removeChild(a)

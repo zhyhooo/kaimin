@@ -54,13 +54,20 @@ async def list_events(
             )
 
     events = query.order_by(Event.event_time.desc()).all()
-    return [{
-        "id": e.id, "title": e.title, "cover_image": e.cover_image,
-        "event_time": str(e.event_time), "location": e.location,
-        "signup_deadline": str(e.signup_deadline),
-        "contact_person": e.contact_person, "max_participants": e.max_participants,
-        "branch_id": e.branch_id, "is_full": False  # TODO: 计算报名人数
-    } for e in events]
+    result = []
+    for e in events:
+        signup_count = db.query(EventRegistration).filter(
+            EventRegistration.event_id == e.id, EventRegistration.cancelled_at.is_(None)
+        ).count()
+        result.append({
+            "id": e.id, "title": e.title, "cover_image": e.cover_image,
+            "event_time": str(e.event_time), "location": e.location,
+            "signup_deadline": str(e.signup_deadline) if e.signup_deadline else None,
+            "contact_person": e.contact_person, "max_participants": e.max_participants,
+            "signup_count": signup_count,
+            "status": e.status, "branch_id": e.branch_id
+        })
+    return result
 
 
 @router.get("/{event_id}")

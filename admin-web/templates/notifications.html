@@ -5,7 +5,7 @@
   </div>
   <table><tr><th>ID</th><th>标题</th><th>时间</th><th>操作</th></tr>
   <tr v-for="n in $root.notificationList" :key="n.id">
-    <td>{{ n.id }}</td><td>{{ n.title }}</td><td>{{ $root.fmtTime(n.created_at) }}</td>
+    <td>{{ n.id }}</td><td>{{ n.title }}</td><td>{{ $root.fmtTime(n.publish_time) }}</td>
     <td>
       <button class="btn btn-default btn-sm" @click="$root.editNotif(n)">编辑</button>
       <button class="btn btn-danger btn-sm" @click="$root.deleteNotif(n.id)">删除</button>

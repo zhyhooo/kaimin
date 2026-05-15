@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
 from app.database import get_db
-from app.models import SocialInfo, SocialInfoStatus, User, Member, ScoreRecord, ScoreDimension, UserRole
+from app.models import SocialInfo, SocialInfoStatus, User, Member, MemberStatus, ScoreRecord, ScoreDimension, UserRole
 from app.auth import get_current_user, require_leader, require_member
 from app.config import get_settings
 import aiosmtplib
@@ -37,7 +37,16 @@ async def submit_social_info(
     """提交社情民意信息"""
     member = db.query(Member).filter(Member.user_id == current_user.id).first()
     if not member:
-        raise HTTPException(status_code=400, detail="请先完善会员信息")
+        # 管理员提交时自动创建会员档案
+        if current_user.role in (UserRole.ORG_LEADER, UserRole.SUPER_ADMIN, UserRole.BRANCH_LEADER):
+            member = Member(
+                user_id=current_user.id, name=current_user.phone,
+                status=MemberStatus.ACTIVE
+            )
+            db.add(member)
+            db.flush()
+        else:
+            raise HTTPException(status_code=400, detail="请先完善会员信息")
 
     info = SocialInfo(
         title=data.title, is_joint=data.is_joint,
