@@ -4,7 +4,7 @@ App({
     token: null,
     role: null,
     memberId: null,
-    baseUrl: 'https://api.kaimin.org'
+    baseUrl: 'http://118.25.21.194'
   },
 
   onLaunch() {

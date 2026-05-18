@@ -36,7 +36,6 @@
     "ignoreUploadUnusedFiles": true
   },
   "compileType": "miniprogram",
-  "appid": "wx5d780414a35ab34c",
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",
@@ -46,5 +45,6 @@
   "packOptions": {
     "ignore": [],
     "include": []
-  }
+  },
+  "appid": "wx5d780414a35ab34c"
 }

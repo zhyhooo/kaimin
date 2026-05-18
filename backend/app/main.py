@@ -21,6 +21,7 @@ from app.routers.public import router as public_router
 from app.routers.profile import router as profile_router
 from app.routers.users import router as users_router
 from app.routers.admin import router as admin_router
+from app.routers.stats import router as stats_router
 
 settings = get_settings()
 
@@ -68,6 +69,7 @@ app.include_router(public_router)
 app.include_router(profile_router)
 app.include_router(users_router)
 app.include_router(admin_router)
+app.include_router(stats_router)
 
 
 @app.get("/")

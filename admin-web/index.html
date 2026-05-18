@@ -196,13 +196,20 @@ createApp({
         this.memberList=mems||[]; this.eventList=events||[]; this.socialList=social||[]
         this.pendingBookings=venues||[]; this.branches=branches||[]
         this.stats={total_members:mems?.length||0,active_events:events?.filter(e=>e.status==='published')?.length||0,total_infos:social?.length||0,pending_bookings:venues?.length||0}
-        // 延迟渲染图表
+        const stats = await this.api('/stats/dashboard')
         this.$nextTick(()=>{
           setTimeout(()=>{
+            const labels = (stats.event_monthly||[]).map(d=>d.label)
+            const signups = (stats.event_monthly||[]).map(d=>d.signups)
+            const infos   = (stats.info_monthly||[]).map(d=>d.count)
             const c1=document.getElementById('chart-events')
             const c2=document.getElementById('chart-infos')
-            if(c1) echarts.init(c1).setOption({tooltip:{},xAxis:{data:['1月','2月','3月','4月','5月','6月']},yAxis:{},series:[{type:'bar',data:[5,12,8,15,10,20]}]})
-            if(c2) echarts.init(c2).setOption({tooltip:{},xAxis:{data:['1月','2月','3月','4月','5月','6月']},yAxis:{},series:[{type:'line',data:[3,8,5,12,9,15]}]})
+            if(c1&&labels.length) echarts.init(c1).setOption({tooltip:{},xAxis:{data:labels},yAxis:{},series:[{name:'报名人次',type:'bar',data:signups}]})
+            if(c2&&labels.length) echarts.init(c2).setOption({tooltip:{},xAxis:{data:labels},yAxis:{},series:[{name:'社情民意',type:'line',data:infos}]})
+            if(!labels.length){
+              if(c1) echarts.init(c1).setOption({title:{text:'暂无活动数据',left:'center',top:'center',textStyle:{color:'#999',fontSize:14}}})
+              if(c2) echarts.init(c2).setOption({title:{text:'暂无社情民意数据',left:'center',top:'center',textStyle:{color:'#999',fontSize:14}}})
+            }
           },200)
         })
       }catch(e){console.error(e)}
@@ -294,7 +301,7 @@ createApp({
     },
     downloadTemplate(){
       const headers = ['姓名','手机号','身份证号','支部名称','会内职务','工作单位','工作职务','职称','学历','毕业院校','专业特长','社会职务','籍贯','入会时间']
-      const example = ['张三','138000001111','330106199001011234','第一支部','会员','XX科技有限公司','工程师','高级工程师','本科','浙江大学','计算机','市政协委员','浙江杭州','2024-01-01']
+      const example = ['张三','13800001111','330106199001011234','第一支部','会员','XX科技有限公司','工程师','高级工程师','本科','浙江大学','计算机','市政协委员','浙江杭州','2024-01-01']
       const csvContent = '\uFEFF' + headers.join(',') + '\n' + example.join(',') + '\n'
       const blob = new Blob([csvContent], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8'})
       const url = URL.createObjectURL(blob); const a = document.createElement('a')
