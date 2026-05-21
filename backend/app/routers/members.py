@@ -33,8 +33,22 @@ class MemberCreate(BaseModel):
     join_date: Optional[date] = None
 
 
+# 管理员可编辑的全部字段
+ADMIN_EDITABLE_FIELDS = {
+    "name", "phone", "id_card", "branch_id", "org_position",
+    "work_unit", "work_position", "title", "education",
+    "school", "specialty", "social_position", "native_place", "join_date"
+}
+
+# 普通会员仅可编辑的 7 个安全字段
+MEMBER_SAFE_FIELDS = {
+    "work_unit", "work_position", "title", "education",
+    "school", "specialty", "social_position"
+}
+
+
 class MemberUpdate(BaseModel):
-    """会员编辑字段"""
+    """管理员编辑字段（全量）"""
     name: Optional[str] = None
     phone: Optional[str] = None
     id_card: Optional[str] = None
@@ -201,12 +215,21 @@ async def update_member(
         raise HTTPException(status_code=404, detail="会员不存在")
 
     # 权限：本人或组织委员及以上
-    if current_user.role not in (UserRole.ORG_LEADER, UserRole.SUPER_ADMIN):
+    is_admin = current_user.role in (UserRole.ORG_LEADER, UserRole.SUPER_ADMIN)
+    if not is_admin:
         self_member = db.query(Member).filter(Member.user_id == current_user.id).first()
         if not self_member or self_member.id != member_id:
             raise HTTPException(status_code=403, detail="仅可编辑自己的档案")
 
-    for field, value in data.dict(exclude_unset=True).items():
+    updates = data.dict(exclude_unset=True)
+
+    # 普通会员只允许编辑 7 个安全字段
+    if not is_admin:
+        blocked = [k for k in updates if k not in MEMBER_SAFE_FIELDS]
+        if blocked:
+            raise HTTPException(status_code=403, detail=f"无权限编辑以下字段: {', '.join(blocked)}")
+
+    for field, value in updates.items():
         setattr(member, field, value)
     db.commit()
     return {"message": "更新成功", "id": member.id}
