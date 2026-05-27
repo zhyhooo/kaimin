@@ -63,15 +63,15 @@ Page({
     try {
       const res = await app.request({ url: '/events/' })
       const events = res || []
-      // 建立日期 -> 事件列表映射
-      const eventMap = {}
-      events.forEach(e => {
-        if (e.event_time) {
-          const dateKey = e.event_time.split('T')[0] || e.event_time.split(' ')[0]
-          if (!eventMap[dateKey]) eventMap[dateKey] = []
-          eventMap[dateKey].push(e)
-        }
-      })
+  // 建立日期 -> 事件列表映射
+  const eventMap = {}
+  events.forEach(e => {
+    if (e.event_time) {
+      const dateKey = e.event_time.includes('T') ? e.event_time.split('T')[0] : e.event_time.split(' ')[0]
+      if (!eventMap[dateKey]) eventMap[dateKey] = []
+      eventMap[dateKey].push(e)
+    }
+  })
       this.setData({ events, eventMap })
     } catch (e) {}
   },

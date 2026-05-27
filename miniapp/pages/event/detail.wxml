@@ -5,7 +5,7 @@
     <view class="meta">
       <text class="time">🕐 {{detail.event_time}}</text>
       <text class="location">📍 {{detail.location}}</text>
-      <text class="organizer">👤 组织者：{{detail.organizer}}</text>
+      <text class="organizer" wx:if="{{detail.contact_person}}">👤 联系人：{{detail.contact_person}}</text>
     </view>
   </view>
   <view class="body">

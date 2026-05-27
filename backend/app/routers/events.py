@@ -153,10 +153,13 @@ async def cancel_signup(
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404)
-    if datetime.now() > event.signup_deadline:
-        raise HTTPException(status_code=400, detail="报名已截止，无法取消")
+    # 活动开始后不允许取消
+    if datetime.now() > event.event_time:
+        raise HTTPException(status_code=400, detail="活动已开始，无法取消报名")
 
     member = db.query(Member).filter(Member.user_id == current_user.id).first()
+    if not member:
+        raise HTTPException(status_code=400, detail="请先完善会员信息")
     reg = db.query(EventRegistration).filter(
         EventRegistration.event_id == event_id,
         EventRegistration.member_id == member.id,
@@ -176,14 +179,26 @@ async def leave_event(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="活动不存在")
+
     member = db.query(Member).filter(Member.user_id == current_user.id).first()
+    if not member:
+        raise HTTPException(status_code=400, detail="请先完善会员信息")
+
     reg = db.query(EventRegistration).filter(
         EventRegistration.event_id == event_id,
         EventRegistration.member_id == member.id,
         EventRegistration.cancelled_at.is_(None)
     ).first()
     if not reg:
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=404, detail="未报名，无法请假")
+
+    # 活动开始后不允许请假
+    if datetime.now() > event.event_time:
+        raise HTTPException(status_code=400, detail="活动已开始，无法请假")
+
     reg.is_leave = True
     reg.leave_reason = reason
     db.commit()

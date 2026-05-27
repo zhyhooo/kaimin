@@ -348,7 +348,8 @@ createApp({
         title:e.title, content:e.content||'', cover_image:e.cover_image||'',
         event_time:(e.event_time||'').replace(' ','T'),
         signup_deadline:(e.signup_deadline||'').replace(' ','T'),
-        location:e.location||'', max_participants:e.max_participants||0
+        location:e.location||'', max_participants:e.max_participants||0,
+        contact_person:e.contact_person||''
       }
     },
     async deleteEvent(id){ if(!confirm('确认删除?'))return; try{ await this.api('/events/'+id,'DELETE'); await this.loadEvents() }catch(e){ alert('删除失败') } },
