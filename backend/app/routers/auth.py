@@ -75,19 +75,72 @@ async def wechat_login(req: WechatLoginRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/bind-phone", response_model=TokenResponse)
-async def bind_phone(req: PhoneLoginRequest, current_user: User = Depends(get_current_user)):
-    """绑定手机号 - 与后台导入的会员手机号匹配"""
-    db = Depends(get_db)
-    # 查找匹配的会员
-    # 注意: 实际存储时手机号是加密的，这里需要加密后匹配
-    # 简化处理：直接查询（生产环境应加密匹配）
-    # member = db.query(Member).filter(Member.phone == req.phone).first()
-    # if member:
-    #    current_user.role = UserRole.MEMBER
-    #    member.user_id = current_user.id
-    #    db.commit()
-    # 简化返回
-    raise HTTPException(status_code=501, detail="绑定流程待实现（需与会员导入流程对接）")
+async def bind_phone(req: BindPhoneRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """绑定手机号 - 通过微信 getPhoneNumber code 换取真实手机号"""
+    from app.config import get_settings
+    settings = get_settings()
+
+    # 第一步：获取 access_token
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            "https://api.weixin.qq.com/cgi-bin/token",
+            params={
+                "grant_type": "client_credential",
+                "appid": settings.WECHAT_APPID,
+                "secret": settings.WECHAT_SECRET
+            }
+        )
+        token_data = resp.json()
+    access_token = token_data.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=400, detail=f"获取access_token失败: {token_data.get('errmsg', '')}")
+
+    # 第二步：用 code 换手机号
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            "https://api.weixin.qq.com/wxa/business/getuserphonenumber",
+            params={"access_token": access_token},
+            json={"code": req.code}
+        )
+        phone_data = resp.json()
+
+    if phone_data.get("errcode") != 0:
+        raise HTTPException(status_code=400, detail=f"获取手机号失败: {phone_data.get('errmsg', '')}")
+
+    phone = phone_data.get("phone_info", {}).get("purePhoneNumber")
+    if not phone:
+        raise HTTPException(status_code=400, detail="未获取到手机号")
+
+    # 检查手机号是否已被其他用户绑定
+    existing = db.query(User).filter(User.phone == phone, User.id != current_user.id).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="该手机号已被其他账号绑定")
+
+    # 绑定手机号到当前用户
+    current_user.phone = phone
+
+    # 查找是否已有该手机号的会员档案
+    member = db.query(Member).filter(Member.user_id == current_user.id).first()
+    if not member:
+        # 检查是否有其他 user 关联了该手机号的会员（历史数据清理）
+        other_user = db.query(User).filter(User.phone == phone).first()
+        if other_user and other_user.id != current_user.id:
+            other_member = db.query(Member).filter(Member.user_id == other_user.id).first()
+            if other_member:
+                # 把会员档案转移到当前用户
+                other_member.user_id = current_user.id
+                member = other_member
+                # 删除旧的空 user
+                db.delete(other_user)
+
+    if not member and current_user.role == UserRole.PUBLIC:
+        current_user.role = UserRole.MEMBER
+
+    db.commit()
+
+    member_id = member.id if member else None
+    token = create_token({"sub": str(current_user.id), "role": current_user.role.value})
+    return TokenResponse(access_token=token, role=current_user.role.value, member_id=member_id)
 
 
 @router.post("/register", response_model=TokenResponse)

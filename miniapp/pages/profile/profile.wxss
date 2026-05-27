@@ -15,4 +15,7 @@
 .right { display: flex; align-items: center; }
 .msg-badge { background: #C41E2E; color: #fff; font-size: 20rpx; padding: 2rpx 10rpx; border-radius: 20rpx; margin-right: 10rpx; }
 .logout-section { padding: 40rpx 20rpx; }
+.bind-phone-bar { background: #fff; margin: 20rpx; border-radius: 12rpx; padding: 30rpx 24rpx; text-align: center; }
+.btn-bind-phone { background: #C41E2E; color: #fff; border-radius: 40rpx; font-size: 30rpx; padding: 18rpx 0; margin-bottom: 12rpx; border: none; }
+.bind-tip { font-size: 24rpx; color: #999; }
 .btn-logout { background: #fff; color: #999; border: 1rpx solid #ddd; border-radius: 40rpx; font-size: 28rpx; }

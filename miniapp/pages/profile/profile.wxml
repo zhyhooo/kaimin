@@ -2,11 +2,17 @@
   <view class="profile-card" bindtap="goEdit">
     <image class="avatar" src="{{profile.member.avatar || '/assets/default-avatar.png'}}" mode="aspectFill"/>
     <view class="info">
-      <text class="name">{{profile.member.name || '未登录'}}</text>
-      <text class="role">{{profile.member.org_position || ''}}</text>
+      <text class="name">{{profile.member && profile.member.name || (profile.role && profile.role) || '未登录'}}</text>
+      <text class="role">{{profile.member && profile.member.org_position || roleLabel(profile.role) || ''}}</text>
       <text wx:if="{{profile.branch && profile.branch.name}}" class="branch">{{profile.branch.name}}</text>
     </view>
     <view class="badge" wx:if="{{unreadCount > 0}}">{{unreadCount}}</view>
+  </view>
+
+  <!-- 未绑定手机号时显示 -->
+  <view class="bind-phone-bar" wx:if="{{!profile.member}}">
+    <button class="btn-bind-phone" open-type="getPhoneNumber" bindgetphonenumber="onGetPhone">📱 绑定手机号</button>
+    <text class="bind-tip">绑定后自动关联会员档案</text>
   </view>
 
   <view class="menu-section">

@@ -170,11 +170,17 @@ async def create_member(
     current_user: User = Depends(require_leader)
 ):
     """创建会员（组织委员权限）"""
-    # 创建 User
-    from app.auth import hash_phone
-    user = User(phone=data.phone, role=UserRole.MEMBER)
-    db.add(user)
-    db.flush()
+    # 先查是否已有绑定手机号的小程序用户，复用避免多账号
+    user = db.query(User).filter(User.phone == data.phone).first()
+    if not user:
+        user = User(phone=data.phone, role=UserRole.MEMBER)
+        db.add(user)
+        db.flush()
+    else:
+        # 已有用户升级为会员角色
+        if user.role == UserRole.PUBLIC:
+            user.role = UserRole.MEMBER
+            db.flush()
 
     # 身份证号推算性别和出生年月
     gender = None
@@ -395,10 +401,15 @@ async def import_members(
                 if not parsed_join_date:
                     errors.append(f"第{row_idx}行: 入会时间格式无法识别 ({join_date_str})，已跳过")
 
-            # 创建 User
-            user = User(phone=phone, role=UserRole.MEMBER)
-            db.add(user)
-            db.flush()
+            # 复用已有手机号用户，避免多账号
+            user = db.query(User).filter(User.phone == phone).first()
+            if not user:
+                user = User(phone=phone, role=UserRole.MEMBER)
+                db.add(user)
+                db.flush()
+            elif user.role == UserRole.PUBLIC:
+                user.role = UserRole.MEMBER
+                db.flush()
 
             # 创建 Member
             member = Member(
