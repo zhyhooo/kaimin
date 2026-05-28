@@ -106,6 +106,9 @@ class Notification(Base):
     expire_time = Column(DateTime, nullable=True, comment="过期时间")
     author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     status = Column(String(20), default="draft", comment="draft/published/expired")
+    is_deleted = Column(Boolean, default=False, comment="软删除标记")
+    deleted_at = Column(DateTime, nullable=True, comment="删除时间")
+    deleted_by = Column(Integer, ForeignKey("users.id"), nullable=True, comment="删除人")
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -139,6 +142,9 @@ class Event(Base):
     photos = Column(JSON, nullable=True, comment="活动照片")
     links = Column(JSON, nullable=True, comment="宣传链接")
     status = Column(String(20), default="draft")
+    is_deleted = Column(Boolean, default=False, comment="软删除标记")
+    deleted_at = Column(DateTime, nullable=True, comment="删除时间")
+    deleted_by = Column(Integer, ForeignKey("users.id"), nullable=True, comment="删除人")
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -208,6 +214,7 @@ class SocialInfoStatus(str, enum.Enum):
     PROVINCE_ADOPTED = "province_adopted"
     NATIONAL_ADOPTED = "national_adopted"
     REJECTED = "rejected"
+    DELETED = "deleted"
 
 
 class SocialInfo(Base):

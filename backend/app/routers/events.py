@@ -43,15 +43,17 @@ async def list_events(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """活动列表 - 支部活动仅本支部可见"""
-    query = db.query(Event).filter(Event.status == "published")
-
-    if current_user.role in (UserRole.MEMBER, UserRole.CANDIDATE, UserRole.BRANCH_LEADER):
-        member = db.query(Member).filter(Member.user_id == current_user.id).first()
-        if member:
-            query = query.filter(
-                (Event.branch_id.is_(None)) | (Event.branch_id == member.branch_id)
-            )
+    """活动列表 - 超级管理员看全部，其余角色仅发表+未删+本支部"""
+    if current_user.role == UserRole.SUPER_ADMIN:
+        query = db.query(Event)
+    else:
+        query = db.query(Event).filter(Event.status == "published", Event.is_deleted == False)
+        if current_user.role in (UserRole.MEMBER, UserRole.CANDIDATE, UserRole.BRANCH_LEADER):
+            member = db.query(Member).filter(Member.user_id == current_user.id).first()
+            if member:
+                query = query.filter(
+                    (Event.branch_id.is_(None)) | (Event.branch_id == member.branch_id)
+                )
 
     events = query.order_by(Event.event_time.desc()).all()
     result = []
@@ -65,7 +67,8 @@ async def list_events(
             "signup_deadline": str(e.signup_deadline) if e.signup_deadline else None,
             "contact_person": e.contact_person, "max_participants": e.max_participants,
             "signup_count": signup_count,
-            "status": e.status, "branch_id": e.branch_id
+            "status": e.status, "branch_id": e.branch_id,
+            "is_deleted": e.is_deleted
         })
     return result
 
@@ -322,6 +325,25 @@ async def update_event(
     return {"id": event.id, "message": "活动更新成功"}
 
 
+@router.post("/{event_id}/restore")
+async def restore_event(
+    event_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """恢复已删除活动（仅超级管理员）"""
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="仅超级管理员可恢复")
+    event = db.query(Event).filter(Event.id == event_id, Event.is_deleted == True).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="未找到已删除的活动")
+    event.is_deleted = False
+    event.deleted_at = None
+    event.deleted_by = None
+    db.commit()
+    return {"message": "活动已恢复"}
+
+
 @router.delete("/{event_id}")
 async def delete_event(
     event_id: int,
@@ -332,6 +354,16 @@ async def delete_event(
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="活动不存在")
-    db.delete(event)
+
+    # 支部主委只能删本支部活动
+    if current_user.role == UserRole.BRANCH_LEADER:
+        member = db.query(Member).filter(Member.user_id == current_user.id).first()
+        if not member or event.branch_id != member.branch_id:
+            raise HTTPException(status_code=403, detail="无权限删除非本支部活动")
+
+    # 软删除
+    event.is_deleted = True
+    event.deleted_at = datetime.now()
+    event.deleted_by = current_user.id
     db.commit()
     return {"message": "活动已删除"}

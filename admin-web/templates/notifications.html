@@ -7,8 +7,9 @@
   <tr v-for="n in $root.notificationList" :key="n.id">
     <td>{{ n.id }}</td><td>{{ n.title }}</td><td>{{ $root.fmtTime(n.publish_time) }}</td>
     <td>
-      <button class="btn btn-default btn-sm" @click="$root.editNotif(n)">编辑</button>
-      <button class="btn btn-danger btn-sm" @click="$root.deleteNotif(n.id)">删除</button>
+      <button v-if="!n.is_deleted" class="btn btn-default btn-sm" @click="$root.editNotif(n)">编辑</button>
+      <button v-if="!n.is_deleted" class="btn btn-danger btn-sm" @click="$root.deleteNotif(n.id)">删除</button>
+      <button v-if="n.is_deleted" class="btn btn-success btn-sm" @click="$root.restoreNotif(n.id)">🔄 恢复</button>
     </td>
   </tr></table>
 </div>

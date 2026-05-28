@@ -285,7 +285,8 @@ createApp({
         specialty:m.specialty||'', social_position:m.social_position||'', native_place:m.native_place||''
       }
     },
-    async deleteMember(id){ if(!confirm('确认删除?'))return; try{ await this.api('/members/'+id,'DELETE'); await this.loadMembers() }catch(e){ alert('删除失败') } },
+    async deleteMember(id){ if(!confirm('确认标记为离会？'))return; try{ await this.api('/members/'+id,'DELETE'); await this.loadMembers() }catch(e){ alert('操作失败') } },
+    async restoreMember(id){ if(!confirm('确认恢复该会员？'))return; try{ await this.api('/members/'+id+'/restore','POST'); await this.loadMembers() }catch(e){ alert('恢复失败') } },
     onFileSelected(e){ this.selectedFile = e.target.files[0]; this.importResult = null },
     async doImport(){
       if(!this.selectedFile) return; this.importing = true
@@ -353,6 +354,7 @@ createApp({
       }
     },
     async deleteEvent(id){ if(!confirm('确认删除?'))return; try{ await this.api('/events/'+id,'DELETE'); await this.loadEvents() }catch(e){ alert('删除失败') } },
+    async restoreEvent(id){ if(!confirm('确认恢复该活动？'))return; try{ await this.api('/events/'+id+'/restore','POST'); await this.loadEvents() }catch(e){ alert('恢复失败') } },
     exportRegistrations(eventId){
       if(!confirm('确认导出该活动的报名名单？')) return
       const a = document.createElement('a')
@@ -372,7 +374,8 @@ createApp({
       catch(e){ this.handleError(e, '保存失败') }
     },
     async adoptInfo(id){ try{ await this.api('/social-info/'+id+'/adopt','POST',{level:this.adoptLevel[id]}); alert('已标记'); await this.loadSocial() }catch(e){ alert('操作失败') } },
-    async deleteSocial(id){ if(!confirm('确认删除?'))return; try{ await this.api('/social-info/'+id,'DELETE'); await this.loadSocial() }catch(e){ alert('删除失败') } },
+    async deleteSocial(id){ if(!confirm('确认删除？'))return; try{ await this.api('/social-info/'+id,'DELETE'); await this.loadSocial() }catch(e){ alert('删除失败') } },
+    async restoreSocial(id){ if(!confirm('确认恢复？'))return; try{ await this.api('/social-info/'+id+'/restore','POST'); await this.loadSocial() }catch(e){ alert('恢复失败') } },
     // ===== 阵地 =====
     async loadVenues(){ try{ this.pendingBookings=await this.api('/venues/bookings/pending')||[] }catch(e){} },
     async approveBooking(id){ try{ await this.api('/venues/bookings/'+id+'/approve','POST'); await this.loadVenues() }catch(e){ alert('操作失败') } },
@@ -405,11 +408,12 @@ createApp({
       } catch(e){ this.handleError(e, '保存失败') }
     },
     editNotif(n){ this.editingNotif=n; this.notifForm={title:n.title,content:n.content||'',cover_image:n.cover_image||''}; this.showNotifModal=true },
-    async deleteNotif(id){ if(!confirm('确认删除?'))return; try{ await this.api('/notifications/'+id,'DELETE'); await this.loadNotifications() }catch(e){ alert('删除失败') } },
+    async deleteNotif(id){ if(!confirm('确认删除？'))return; try{ await this.api('/notifications/'+id,'DELETE'); await this.loadNotifications() }catch(e){ alert('删除失败') } },
+    async restoreNotif(id){ if(!confirm('确认恢复？'))return; try{ await this.api('/notifications/'+id+'/restore','POST'); await this.loadNotifications() }catch(e){ alert('恢复失败') } },
     // ===== 工具 =====
     roleLabel(r){ const m={super_admin:'超级管理员',org_leader:'总支委员',branch_leader:'支部主委',member:'会员',public:'公众'}; return m[r]||r },
     statusLabel(s){ const m={active:'在会',inactive:'离会',pending:'待审核'}; return m[s]||s },
-    socialStatusLabel(s){ const m={pending:'待审核',city_adopted:'市级录用',province_adopted:'省级录用',national_adopted:'全国录用',rejected:'未录用'}; return m[s]||s },
+    socialStatusLabel(s){ const m={pending:'待审核',city_adopted:'市级录用',province_adopted:'省级录用',national_adopted:'全国录用',rejected:'未录用',deleted:'已删除'}; return m[s]||s },
     dimLabel(d){ const m={political:'政治思想',meeting:'会务活动',participation:'参政议政',social:'社会服务',publicity:'宣传报道',performance:'工作业绩'}; return m[d]||d },
     fmtTime(t){ if(!t)return'-'; return new Date(t).toLocaleString('zh-CN') },
     saveConfig(t){ alert('配置保存成功（需后端支持）') }

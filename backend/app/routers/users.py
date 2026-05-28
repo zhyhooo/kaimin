@@ -101,9 +101,11 @@ async def delete_user(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
-    """删除用户"""
+    """软删除用户"""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
-    db.delete(user)
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="用户已禁用")
+    user.is_active = False
     db.commit()

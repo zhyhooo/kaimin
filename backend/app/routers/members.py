@@ -248,18 +248,30 @@ async def delete_member(
     current_user: User = Depends(require_org_leader)
 ):
     """删除会员（组织委员以上）"""
-    member = db.query(Member).filter(Member.id == member_id).first()
-    if not member:
-        raise HTTPException(status_code=404, detail="会员不存在")
+      member = db.query(Member).filter(Member.id == member_id).first()
+      if not member:
+          raise HTTPException(status_code=404, detail="会员不存在")
+      if member.status == MemberStatus.INACTIVE:
+          raise HTTPException(status_code=400, detail="会员已离会")
 
-    # 同时删除关联的 User
-    if member.user_id:
-        user = db.query(User).filter(User.id == member.user_id).first()
-        if user:
-            db.delete(user)
-    db.delete(member)
+      member.status = MemberStatus.INACTIVE
+      db.commit()
+      return {"message": "会员已标记为离会"}
+
+
+@router.post("/{member_id}/restore")
+async def restore_member(
+    member_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_org_leader)
+):
+    """恢复已离会会员"""
+    member = db.query(Member).filter(Member.id == member_id, Member.status == MemberStatus.INACTIVE).first()
+    if not member:
+        raise HTTPException(status_code=404, detail="未找到已离会的会员")
+    member.status = MemberStatus.ACTIVE
     db.commit()
-    return {"message": "会员已删除"}
+    return {"message": "会员已恢复"}
 
 
 @router.get("/export/excel")

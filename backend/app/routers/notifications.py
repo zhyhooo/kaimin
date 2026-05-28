@@ -38,6 +38,7 @@ async def list_notifications(
     from sqlalchemy import or_
     query = db.query(Notification).filter(
         Notification.status == "published",
+        Notification.is_deleted == False,
         or_(Notification.publish_time <= now, Notification.publish_time.is_(None))
     )
 
@@ -74,7 +75,8 @@ async def list_notifications(
             "event_time": str(n.event_time) if n.event_time else None,
             "location": n.location, "is_pinned": n.is_pinned,
             "publish_time": str(n.publish_time),
-            "is_read": read_record.is_read if read_record else False
+            "is_read": read_record.is_read if read_record else False,
+            "is_deleted": n.is_deleted
         })
     return result
 
@@ -193,10 +195,31 @@ async def delete_notification(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_leader)
 ):
-    """删除通知"""
+    """软删除通知"""
     notification = db.query(Notification).filter(Notification.id == notification_id).first()
     if not notification:
         raise HTTPException(status_code=404, detail="通知不存在")
-    db.delete(notification)
+    if notification.is_deleted:
+        raise HTTPException(status_code=400, detail="通知已删除")
+    notification.is_deleted = True
+    notification.deleted_at = datetime.now()
+    notification.deleted_by = current_user.id
     db.commit()
     return {"message": "已删除"}
+
+
+@router.post("/{notification_id}/restore")
+async def restore_notification(
+    notification_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_leader)
+):
+    """恢复已删除通知"""
+    notification = db.query(Notification).filter(Notification.id == notification_id, Notification.is_deleted == True).first()
+    if not notification:
+        raise HTTPException(status_code=404, detail="未找到已删除的通知")
+    notification.is_deleted = False
+    notification.deleted_at = None
+    notification.deleted_by = None
+    db.commit()
+    return {"message": "已恢复"}

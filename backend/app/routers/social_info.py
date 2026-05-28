@@ -191,13 +191,30 @@ async def delete_social_info(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_leader)
 ):
-    """删除社情民意"""
+    """软删除社情民意"""
     info = db.query(SocialInfo).filter(SocialInfo.id == info_id).first()
     if not info:
         raise HTTPException(status_code=404, detail="社情民意不存在")
-    db.delete(info)
+    if info.status == SocialInfoStatus.DELETED:
+        raise HTTPException(status_code=400, detail="社情民意已删除")
+    info.status = SocialInfoStatus.DELETED
     db.commit()
     return {"message": "已删除"}
+
+
+@router.post("/{info_id}/restore")
+async def restore_social_info(
+    info_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_leader)
+):
+    """恢复已删除社情民意"""
+    info = db.query(SocialInfo).filter(SocialInfo.id == info_id, SocialInfo.status == SocialInfoStatus.DELETED).first()
+    if not info:
+        raise HTTPException(status_code=404, detail="未找到已删除的社情民意")
+    info.status = SocialInfoStatus.PENDING
+    db.commit()
+    return {"message": "已恢复"}
 
 
 @router.get("/leaderboard")
@@ -246,4 +263,4 @@ async def export_social_infos(
 
 
 level_display = {"pending": "待审核", "city_adopted": "市级录用", "province_adopted": "省级录用",
-                 "national_adopted": "全国录用", "rejected": "未录用"}
+                 "national_adopted": "全国录用", "rejected": "未录用", "deleted": "已删除"}

@@ -10,8 +10,9 @@
     <td>{{ $root.fmtTime(i.created_at) }}</td>
     <td>
       <select v-model="$root.adoptLevel[i.id]" style="width:100px;padding:4px"><option value="">--录用--</option><option value="city">市级</option><option value="province">省级</option><option value="national">全国</option></select>
-      <button class="btn btn-primary btn-sm" @click="$root.adoptInfo(i.id)">确认</button>
-      <button class="btn btn-danger btn-sm" @click="$root.deleteSocial(i.id)">删除</button>
+      <button v-if="i.status!=='deleted'" class="btn btn-primary btn-sm" @click="$root.adoptInfo(i.id)">确认</button>
+      <button v-if="i.status!=='deleted'" class="btn btn-danger btn-sm" @click="$root.deleteSocial(i.id)">删除</button>
+      <button v-if="i.status==='deleted'" class="btn btn-success btn-sm" @click="$root.restoreSocial(i.id)">🔄 恢复</button>
     </td>
   </tr></table>
 </div>

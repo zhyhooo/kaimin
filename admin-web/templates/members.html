@@ -15,7 +15,8 @@
     <td><span class="badge" :class="m.status==='active'?'badge-green':(m.status==='pending'?'badge-orange':'badge-red')">{{ $root.statusLabel(m.status) }}</span></td>
     <td>
       <button class="btn btn-default btn-sm" @click="$root.editMember(m)">编辑</button>
-      <button class="btn btn-danger btn-sm" @click="$root.deleteMember(m.id)">删除</button>
+      <button v-if="m.status!=='inactive'" class="btn btn-danger btn-sm" @click="$root.deleteMember(m.id)">删除</button>
+      <button v-if="m.status==='inactive'" class="btn btn-success btn-sm" @click="$root.restoreMember(m.id)">🔄 恢复</button>
     </td>
   </tr></table>
 </div>
